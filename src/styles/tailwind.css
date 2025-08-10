@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* App primitives */
+@layer base {
+  html { @apply antialiased; }
+  body { @apply bg-gray-50 text-gray-900; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-white shadow hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-gray-900 border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 transition-colors;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border;
+  }
+  .badge-league {
+    @apply badge bg-blue-50 text-blue-700 border-blue-200;
+  }
+  .badge-date {
+    @apply badge bg-amber-50 text-amber-700 border-amber-200;
+  }
+  .badge-stadium {
+    @apply badge bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+  .card {
+    @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+  }
+  .card-hover {
+    @apply transition-shadow hover:shadow-md;
+  }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    background: linear-gradient(90deg, #3e83ff 0%, #254fb1 50%, #203772 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+} 

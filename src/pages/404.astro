@@ -1,0 +1,11 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE_URL } from '../lib/env.js';
+---
+<Base title="Página no encontrada" description="La página solicitada no existe." canonical={SITE_URL + '/404'}>
+  <div class="text-center py-16">
+    <h1 class="text-5xl font-extrabold mb-4">404</h1>
+    <p class="text-gray-600 mb-6">La página que buscas no existe.</p>
+    <a href="/" class="btn-primary">Volver al Home</a>
+  </div>
+</Base> 

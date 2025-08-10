@@ -1,0 +1,39 @@
+---
+// @ts-nocheck
+import Base from '../layouts/Base.astro';
+import { getLeagues } from '../lib/leagues.js';
+import { metaBasic } from '../lib/seo.js';
+import { SITE_URL } from '../lib/env.js';
+
+let leagues = [];
+let error = null;
+try {
+  leagues = await getLeagues();
+} catch (e) {
+  error = 'Service unavailable';
+  Astro.response.status = 503;
+}
+
+const meta = metaBasic('Ligas', 'Listado de ligas disponibles con enlaces a próximos partidos y clasificación.', `${SITE_URL}/ligas`);
+---
+<Base { ...meta }>
+  <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">Ligas</h1>
+  { error ? (
+    <div class="card p-6 text-red-600">{error}</div>
+  ) : (
+    <ul class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {leagues.map((l) => (
+        <li class="card p-4 flex items-center justify-between">
+          <div>
+            <p class="font-semibold">{l.name}</p>
+            <p class="text-sm text-gray-600">{l.country}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a class="btn-primary" href={`/liga/${l.slug}`}>Partidos</a>
+            <a class="btn-primary" href={`/clasificacion/${l.slug}`}>Clasificación</a>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )}
+</Base> 

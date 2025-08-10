@@ -1,0 +1,59 @@
+---
+// @ts-nocheck
+import Base from '../layouts/Base.astro';
+import { getUpcomingMatches } from '../lib/matches.js';
+import { metaBasic } from '../lib/seo.js';
+import { SITE_URL } from '../lib/env.js';
+
+/** @type {any[]} */
+let upcoming = [];
+let error = null;
+try {
+  upcoming = await getUpcomingMatches(72);
+} catch (e) {
+  error = 'Service unavailable';
+  Astro.response.status = 503;
+}
+
+const siteUrl = SITE_URL;
+const meta = metaBasic('Próximos partidos (0–72h)', 'Calendario de próximos partidos y pronósticos en las próximas 72 horas.', `${siteUrl}/`);
+
+const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+---
+<Base { ...meta }>
+  <section class="mb-6">
+    <div class="flex items-end justify-between">
+      <div>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gradient-brand">Próximos partidos</h1>
+        <p class="text-sm text-gray-600 mt-1">Analítica y pronósticos en tiempo real (0–72 h)</p>
+      </div>
+      <a href="/ligas" class="btn-secondary">Ver ligas</a>
+    </div>
+  </section>
+
+  { error ? (
+    <div class="card p-6 text-red-600">{error}</div>
+  ) : (
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {upcoming.map((m) => (
+        <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="font-semibold text-lg">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</h2>
+            <span class="badge badge-date">J{m.matchday ?? '—'}</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
+            <span class="badge badge-league">{m.league_name}</span>
+            <span class="badge">{m.league_country}</span>
+            <span class="badge badge-date">{fmtDateTime(m.date)}</span>
+          </div>
+          {m.stadium && (
+            <div class="text-xs text-gray-600 flex items-center gap-2">
+              <span class="badge badge-stadium">{m.stadium}</span>
+              {m.capacity && <span class="text-gray-500">{Number(m.capacity).toLocaleString('es-ES')} espectadores</span>}
+            </div>
+          )}
+        </a>
+      ))}
+    </div>
+  )}
+</Base> 

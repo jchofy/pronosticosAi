@@ -1,0 +1,225 @@
+---
+import { SITE_URL } from '../lib/env.js';
+const {
+  title = 'Pronósticos y Partidos',
+  description = 'Partidos, resultados y pronósticos de fútbol con análisis y estadísticas.',
+  canonical = undefined,
+  noindex = false,
+  jsonLd = null,
+  og = {},
+} = Astro.props;
+
+const siteUrl = SITE_URL;
+const canonicalUrl = canonical || `${siteUrl}${Astro.url.pathname}`;
+const ogTitle = og.title || title;
+const ogDescription = og.description || description;
+const ogType = og.type || 'website';
+const ogUrl = og.url || canonicalUrl;
+const ogImage = og.image || `${siteUrl}/og-default.jpg`;
+
+const path = Astro.url.pathname;
+const isActive = (href) => path === href || path.startsWith(href + '/');
+---
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.ico" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    {noindex && <meta name="robots" content="noindex,follow" />}
+
+    {/* Open Graph */}
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:image" content={ogImage} />
+
+    {/* Twitter */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {jsonLd && (
+      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+    )}
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root { --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
+      body { font-family: var(--font-sans); }
+    </style>
+    <link rel="stylesheet" href="/src/styles/tailwind.css" />
+  </head>
+  <body>
+    <div class="absolute inset-x-0 top-0 h-[240px] bg-gradient-to-br from-brand-50 via-white to-white -z-10"></div>
+    <header class="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div class="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-3">
+          <div class="h-9 w-9 rounded-xl bg-brand-600 text-white grid place-items-center font-extrabold">PAI</div>
+          <div class="leading-tight">
+            <div class="font-extrabold text-lg text-gradient-brand">PronosticosAI</div>
+            <div class="text-[11px] uppercase tracking-wider text-gray-500">Predicción y resultados</div>
+          </div>
+        </a>
+        <nav class="hidden md:flex items-center gap-3 text-sm">
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/') ? 'page' : undefined} href="/">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l9-9 9 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5"/></svg>
+            <span>Home</span>
+          </a>
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/ligas') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/ligas') ? 'page' : undefined} href="/ligas">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
+            <span>Ligas</span>
+          </a>
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/resultados') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/resultados') ? 'page' : undefined} href="/resultados">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+            <span>Resultados</span>
+          </a>
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/clasificacion') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
+            <span>Clasificación</span>
+          </a>
+        </nav>
+                 <button id="mobile-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" data-mobile-toggle class="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2.5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Abrir menú">
+          <svg data-icon-hamburger xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg data-icon-close xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-6 w-6 hidden"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="sr-only">Abrir menú</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div id="mobile-overlay" class="fixed inset-0 z-[60] bg-black/40 opacity-0 pointer-events-none transition-opacity duration-300 md:hidden" aria-hidden="true"></div>
+    <aside id="mobile-drawer" class="fixed inset-y-0 left-0 z-[70] w-80 max-w-[88%] bg-white shadow-xl transform -translate-x-full transition-transform duration-300 md:hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-drawer-title">
+      <div class="p-4 flex items-center justify-between border-b">
+        <div class="flex items-center gap-2">
+          <div class="h-9 w-9 rounded-lg bg-brand-600 text-white grid place-items-center font-extrabold">PAI</div>
+          <span id="mobile-drawer-title" class="font-bold">PronosticosAI</span>
+        </div>
+        <button type="button" data-mobile-close aria-label="Cerrar menú" class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2.5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-6 w-6"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="sr-only">Cerrar menú</span>
+        </button>
+      </div>
+      <nav class="p-3 space-y-2">
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/') ? 'page' : undefined} href="/">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l9-9 9 9M4.5 10.5V21h5.25v-6h4.5v6H19.5V10.5"/></svg>
+          Home
+        </a>
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/ligas') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/ligas') ? 'page' : undefined} href="/ligas">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
+          Ligas
+        </a>
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/resultados') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/resultados') ? 'page' : undefined} href="/resultados">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+          Resultados
+        </a>
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
+          Clasificación
+        </a>
+      </nav>
+      <div class="mt-auto p-3 border-t text-xs text-gray-500">
+        © {new Date().getFullYear()} PronosticosAI
+      </div>
+    </aside>
+
+    <main id="app-main" class="mx-auto max-w-5xl px-4 py-6">
+      <slot />
+    </main>
+    <footer id="app-footer" class="border-t border-gray-200 py-8">
+      <div class="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
+        <p>© {new Date().getFullYear()} PronosticosAI — Todos los derechos reservados</p>
+        <div class="flex items-center gap-4">
+          <a href="/sitemap.xml" class="hover:text-gray-700">Sitemap</a>
+          <a href="/resultados" class="hover:text-gray-700">Resultados</a>
+          <a href="/ligas" class="hover:text-gray-700">Ligas</a>
+        </div>
+      </div>
+    </footer>
+
+    <script>
+      (() => {
+        const openBtn = document.querySelector('[data-mobile-toggle]');
+        const closeBtn = document.querySelector('[data-mobile-close]');
+        const drawer = document.getElementById('mobile-drawer');
+        const overlay = document.getElementById('mobile-overlay');
+        const main = document.getElementById('app-main');
+        const footer = document.getElementById('app-footer');
+        /** @type {HTMLElement|null} */
+        let lastFocus = null;
+
+        if (!openBtn || !drawer || !overlay) return;
+
+        /** @returns {HTMLElement[]} */
+        const getFocusable = () => Array.from(drawer.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])'));
+
+
+        const setButtonIcons = (isOpen) => {
+          const hb = document.querySelector('[data-icon-hamburger]');
+          const cl = document.querySelector('[data-icon-close]');
+          if (hb && cl) {
+            if (isOpen) { hb.classList.add('hidden'); cl.classList.remove('hidden'); }
+            else { hb.classList.remove('hidden'); cl.classList.add('hidden'); }
+          }
+        };
+
+        const open = () => {
+          lastFocus = document.activeElement;
+          drawer.classList.remove('-translate-x-full');
+          overlay.classList.remove('opacity-0', 'pointer-events-none');
+          openBtn.setAttribute('aria-expanded', 'true');
+          setButtonIcons(true);
+          // Hide header toggle to avoid duplicate close buttons in view
+          openBtn.classList.add('invisible');
+          document.body.style.overflow = 'hidden';
+          main && main.setAttribute('aria-hidden', 'true');
+          footer && footer.setAttribute('aria-hidden', 'true');
+          const focusables = getFocusable();
+          if (focusables.length) focusables[0].focus();
+        };
+        const close = () => {
+          drawer.classList.add('-translate-x-full');
+          overlay.classList.add('opacity-0', 'pointer-events-none');
+          openBtn.setAttribute('aria-expanded', 'false');
+          setButtonIcons(false);
+          // Show header toggle again
+          openBtn.classList.remove('invisible');
+          document.body.style.overflow = '';
+          main && main.removeAttribute('aria-hidden');
+          footer && footer.removeAttribute('aria-hidden');
+          try { (lastFocus && 'focus' in lastFocus) && lastFocus.focus(); } catch (_) {}
+        };
+
+        const trap = (e) => {
+          if (e.key !== 'Tab') return;
+          const focusables = Array.from(getFocusable());
+          if (!focusables.length) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        };
+
+        openBtn.addEventListener('click', () => {
+          const isOpen = !drawer.classList.contains('-translate-x-full');
+          if (isOpen) close(); else open();
+        });
+        overlay.addEventListener('click', close);
+        if (closeBtn) closeBtn.addEventListener('click', close);
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+        drawer.addEventListener('keydown', trap);
+      })();
+    </script>
+  </body>
+</html> 

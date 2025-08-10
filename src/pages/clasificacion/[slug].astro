@@ -1,0 +1,73 @@
+---
+// @ts-nocheck
+import Base from '../../layouts/Base.astro';
+import { getLeagueBySlug, getLeagueTable } from '../../lib/leagues.js';
+import { metaBasic } from '../../lib/seo.js';
+import { SITE_URL } from '../../lib/env.js';
+
+const { slug } = Astro.params;
+/** @type {any} */
+let league = null;
+/** @type {any[]} */
+let table = [];
+/** @type {string|null} */
+let error = null;
+
+try {
+  league = await getLeagueBySlug(slug);
+  if (!league) throw new Error('League not found');
+  table = await getLeagueTable(slug);
+} catch (e) {
+  error = 'Service unavailable';
+  Astro.response.status = 503;
+}
+
+const siteUrl = SITE_URL;
+const meta = metaBasic(
+  league ? `Clasificación ${league.name}` : 'Clasificación',
+  league ? `Tabla de posiciones de ${league.name} (${league.country}).` : 'Tabla de posiciones por liga.',
+  `${siteUrl}/clasificacion/${slug}`
+);
+---
+<Base { ...meta }>
+  <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">{league ? `Clasificación – ${league.name}` : 'Clasificación'}</h1>
+
+  { error ? (
+    <div class="card p-6 text-red-600">{error}</div>
+  ) : table.length === 0 ? (
+    <div class="card p-6 text-gray-600">Clasificación no disponible por el momento.</div>
+  ) : (
+    <div class="overflow-x-auto card">
+      <table class="min-w-full table-auto divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Equipo</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">PJ</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">G</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">E</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">P</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">GF</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">GC</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pts</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 bg-white">
+          {table.map((r) => (
+            <tr>
+              <td class="px-3 py-2 text-sm text-gray-700">{r.position}</td>
+              <td class="px-3 py-2 text-sm text-gray-900">{r.team_name}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.played}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.won}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.drawn}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.lost}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.goals_for}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.goals_against}</td>
+              <td class="px-3 py-2 text-sm text-right font-semibold">{r.points}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</Base> 

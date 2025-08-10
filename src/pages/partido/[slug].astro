@@ -1,0 +1,110 @@
+---
+// @ts-nocheck
+import Base from '../../layouts/Base.astro';
+import { getMatchBySlug, getPredictionForMatch } from '../../lib/matches.js';
+import { pageMetaForMatch } from '../../lib/seo.js';
+import { SITE_URL } from '../../lib/env.js';
+
+const { slug } = Astro.params;
+/** @type {any} */
+let match = null;
+/** @type {{ text?: string|null; generatedAt?: string; bets?: Array<{ bet_type: string; selection: string; odds: number }> } | null} */
+let prediction = null;
+
+try {
+  match = await getMatchBySlug(slug);
+  if (!match) {
+    throw new Response('Not found', { status: 404 });
+  }
+  prediction = await getPredictionForMatch(match.id);
+} catch (e) {
+  if (e instanceof Response && e.status === 404) throw e;
+  Astro.response.status = 503;
+}
+
+const siteUrl = SITE_URL;
+const meta = match ? pageMetaForMatch(match, siteUrl) : { title: 'Partido', description: '', canonical: `${siteUrl}/partido/${slug}` };
+
+const now = new Date();
+const matchDate = match ? new Date(match.date) : new Date();
+const isPast = match ? matchDate < now : false;
+const isOld = match ? matchDate < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) : false;
+
+const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' });
+const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
+---
+<Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={meta.jsonLd} og={meta.og} noindex={isOld}>
+  {match ? (
+    <article class="prose prose-sm max-w-none">
+      <div class="mb-2 text-xs text-gray-600 flex items-center gap-2">
+        <a href={`/liga/${match.league_slug}`} class="badge badge-league">{match.league_name}</a>
+        <span class="badge">{match.league_country}</span>
+        <span class="badge badge-date">{fmtDateTime(match.date)}</span>
+      </div>
+
+      <header class="mb-6">
+        <h1 class="not-prose text-3xl md:text-4xl font-extrabold tracking-tight text-gradient-brand">{match.home_team_name} <span class="text-gray-400">vs</span> {match.away_team_name}</h1>
+        {match.stadium && (
+          <p class="not-prose text-xs text-gray-500 mt-1">{match.stadium}{match.stadium_capacity ? ` · ${fmtCap(match.stadium_capacity)} espectadores` : ''}</p>
+        )}
+      </header>
+
+      <section class="not-prose card p-5 bg-white/70">
+        <h2 class="text-lg font-bold mb-3">Pronóstico</h2>
+        {prediction ? (
+          <div class="space-y-3">
+            {prediction.text && (
+              <p class="text-sm text-gray-800">{prediction.text}</p>
+            )}
+            {prediction.bets && prediction.bets.length > 0 && (
+              <div class="overflow-x-auto">
+                <table class="min-w-full table-auto text-sm">
+                  <thead>
+                    <tr class="text-left text-gray-500">
+                      <th class="py-2 pr-4">Mercado</th>
+                      <th class="py-2 pr-4">Selección</th>
+                      <th class="py-2 pr-4">Cuota</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    {prediction.bets.map((b) => (
+                      <tr>
+                        <td class="py-2 pr-4">{b.bet_type || '-'}</td>
+                        <td class="py-2 pr-4">{b.selection || '-'}</td>
+                        <td class="py-2 pr-4">{typeof b.odds === 'number' ? b.odds.toFixed(2) : '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            {prediction.generatedAt && (
+              <p class="text-xs text-gray-500">Actualizado: {new Date(prediction.generatedAt).toLocaleString('es-ES')}</p>
+            )}
+          </div>
+        ) : (
+          <p class="text-sm text-gray-600">Pronóstico próximamente.</p>
+        )}
+      </section>
+
+      <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="card p-4">
+          <h3 class="font-semibold mb-2">Equipo local</h3>
+          <p class="text-sm">{match.home_team_name}</p>
+          {match.home_president && <p class="text-xs text-gray-600">Presidente: {match.home_president}</p>}
+        </div>
+        <div class="card p-4">
+          <h3 class="font-semibold mb-2">Equipo visitante</h3>
+          <p class="text-sm">{match.away_team_name}</p>
+          {match.away_president && <p class="text-xs text-gray-600">Presidente: {match.away_president}</p>}
+        </div>
+      </section>
+
+      {isPast && (
+        <p class="text-xs text-gray-500 mt-4">Partido finalizado o en curso.</p>
+      )}
+    </article>
+  ) : (
+    <div class="card p-6 text-red-600">Service unavailable</div>
+  )}
+</Base> 
