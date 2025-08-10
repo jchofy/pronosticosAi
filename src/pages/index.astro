@@ -16,44 +16,136 @@ try {
 }
 
 const siteUrl = SITE_URL;
-const meta = metaBasic('Próximos partidos (0–72h)', 'Calendario de próximos partidos y pronósticos en las próximas 72 horas.', `${siteUrl}/`);
+const meta = metaBasic(
+  'Pronósticos de fútbol con IA | Próximos partidos (0–72h)',
+  'Analítica y pronósticos de fútbol con IA. Descubre próximos partidos, estadísticas y predicciones en tiempo real para acertar más.',
+  `${siteUrl}/`
+);
 
 const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
 ---
 <Base { ...meta }>
-  <section class="mb-6">
-    <div class="flex items-end justify-between">
-      <div>
-        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-gradient-brand">Próximos partidos</h1>
-        <p class="text-sm text-gray-600 mt-1">Analítica y pronósticos en tiempo real (0–72 h)</p>
+  <!-- Hero -->
+  <section class="mb-10 md:mb-14">
+    <div class="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 md:p-10 shadow-sm">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+        <div class="max-w-2xl">
+          <div class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-[11px] font-semibold text-brand-800 border border-brand-100">Predicción y resultados</div>
+          <h1 class="mt-3 text-3xl md:text-5xl font-extrabold tracking-tight leading-tight">
+            <span class="text-gradient-brand">Pronósticos de fútbol con IA</span>
+          </h1>
+          <p class="mt-3 text-sm md:text-base text-gray-600">
+            Consulta el calendario de partidos, datos clave y predicciones en tiempo real para las próximas 72 horas.
+            Diseñado para apostar mejor, disfrutar más y no perderte ningún encuentro relevante.
+          </p>
+          <div class="mt-5 flex flex-col sm:flex-row gap-3">
+            <a href="/resultados" class="btn-primary">Ver próximos partidos</a>
+            <a href="/ligas" class="btn-secondary">Explorar ligas</a>
+          </div>
+          <div class="mt-6 grid grid-cols-3 gap-4 text-center text-xs text-gray-600">
+            <div class="rounded-lg border border-gray-200 bg-white p-3"><div class="font-bold text-gray-900">0–72h</div><div>Ventana en tiempo real</div></div>
+            <div class="rounded-lg border border-gray-200 bg-white p-3"><div class="font-bold text-gray-900">Estadísticas</div><div>Estadio, aforo, país</div></div>
+            <div class="rounded-lg border border-gray-200 bg-white p-3"><div class="font-bold text-gray-900">Predicción</div><div>Foco en el valor</div></div>
+          </div>
+        </div>
+        <div class="shrink-0 mx-auto md:mx-0">
+          <img src="/logoApp.webp" alt="PronosticosIA" class="h-28 w-28 md:h-36 md:w-36 rounded-2xl" width="144" height="144" loading="lazy" decoding="async" />
+        </div>
       </div>
-      <a href="/ligas" class="btn-secondary">Ver ligas</a>
+      <div class="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-brand-100 opacity-40 blur-3xl"></div>
+      <div class="pointer-events-none absolute -left-20 -bottom-24 h-64 w-64 rounded-full bg-blue-100 opacity-40 blur-3xl"></div>
     </div>
   </section>
 
-  { error ? (
-    <div class="card p-6 text-red-600">{error}</div>
-  ) : (
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {upcoming.map((m) => (
-        <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
-          <div class="flex items-center justify-between mb-1">
-            <h2 class="font-semibold text-lg">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</h2>
-            <span class="badge badge-date">J{m.matchday ?? '—'}</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
-            <span class="badge badge-league">{m.league_name}</span>
-            <span class="badge">{m.league_country}</span>
-            <span class="badge badge-date">{fmtDateTime(m.date)}</span>
-          </div>
-          {m.stadium && (
-            <div class="text-xs text-gray-600 flex items-center gap-2">
-              <span class="badge badge-stadium">{m.stadium}</span>
-              {m.capacity && <span class="text-gray-500">{Number(m.capacity).toLocaleString('es-ES')} espectadores</span>}
-            </div>
-          )}
-        </a>
-      ))}
+  <!-- Feature highlights -->
+  <section class="mb-10 md:mb-14">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="card p-5">
+        <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-700 grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM11 6h2v6h-2V6zm0 8h2v2h-2v-2z"/></svg>
+        </div>
+        <h3 class="font-semibold">Señales claras</h3>
+        <p class="mt-1 text-sm text-gray-600">Interfaz sencilla para tomar decisiones rápidas: qué ver, qué esperar y dónde está el valor.</p>
+      </div>
+      <div class="card p-5">
+        <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-700 grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M3 12l7 7 11-11-1.4-1.4L10 16.2 4.4 10.6 3 12z"/></svg>
+        </div>
+        <h3 class="font-semibold">Datos esenciales</h3>
+        <p class="mt-1 text-sm text-gray-600">Liga, país, estadio y aforo: contexto para entender cada partido de un vistazo.</p>
+      </div>
+      <div class="card p-5">
+        <div class="h-10 w-10 rounded-lg bg-amber-50 text-amber-700 grid place-items-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5"><path d="M12 6a6 6 0 100 12 6 6 0 000-12zm0-4v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </div>
+        <h3 class="font-semibold">En tiempo real</h3>
+        <p class="mt-1 text-sm text-gray-600">Actualización continua en la ventana crítica de 0 a 72 horas antes del inicio.</p>
+      </div>
     </div>
-  )}
+  </section>
+
+  <!-- Upcoming matches -->
+  <section class="mb-12">
+    <div class="mb-4 flex items-end justify-between">
+      <div>
+        <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Próximos partidos</h2>
+        <p class="text-sm text-gray-600 mt-1">Analítica y pronósticos en las próximas 72 horas</p>
+      </div>
+      <a href="/resultados" class="btn-secondary">Ver todos</a>
+    </div>
+    { error ? (
+      <div class="card p-6 text-red-600">{error}</div>
+    ) : (
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {upcoming.map((m) => (
+          <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
+            <div class="flex items-center justify-between mb-1">
+              <h3 class="font-semibold text-lg">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</h3>
+              <span class="badge badge-date">J{m.matchday ?? '—'}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
+              <span class="badge badge-league">{m.league_name}</span>
+              <span class="badge">{m.league_country}</span>
+              <span class="badge badge-date">{fmtDateTime(m.date)}</span>
+            </div>
+            {m.stadium && (
+              <div class="text-xs text-gray-600 flex items-center gap-2">
+                <span class="badge badge-stadium">{m.stadium}</span>
+                {m.capacity && <span class="text-gray-500">{Number(m.capacity).toLocaleString('es-ES')} espectadores</span>}
+              </div>
+            )}
+            <div class="mt-3 flex items-center justify-between text-sm">
+              <span class="text-gray-500">Ver previa y pronóstico</span>
+              <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5l6 6-6 6-1.4-1.4 3.6-3.6H4v-2h11.7l-3.6-3.6 1.4-1.4z"/></svg>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
+  </section>
+
+  <!-- How it works -->
+  <section class="mb-4 md:mb-10">
+    <div class="card p-6 md:p-8">
+      <h2 class="text-xl md:text-2xl font-extrabold tracking-tight text-gray-900">Cómo funciona</h2>
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="font-semibold text-gray-900">1. Ingresa</div>
+          <p class="mt-1">Explora ligas y partidos destacados próximos a disputarse.</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="font-semibold text-gray-900">2. Analiza</div>
+          <p class="mt-1">Consulta contexto clave: liga, país, estadio y aforo.</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-4">
+          <div class="font-semibold text-gray-900">3. Decide</div>
+          <p class="mt-1">Lee la previa con pronóstico para tomar mejores decisiones.</p>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-col sm:flex-row gap-3">
+        <a href="/resultados" class="btn-primary">Empezar ahora</a>
+        <a href="/ligas" class="btn-secondary">Ver ligas disponibles</a>
+      </div>
+    </div>
+  </section>
 </Base> 

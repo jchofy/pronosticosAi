@@ -1,4 +1,4 @@
-# PronosticosAI – Astro SSR
+# PronosticosIA – Astro SSR
 
 Proyecto Astro SSR (Node standalone) que renderiza partidos desde MySQL, con SEO automático (OG/Twitter + JSON-LD SportsEvent) y Tailwind CSS.
 
