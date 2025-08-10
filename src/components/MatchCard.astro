@@ -34,17 +34,17 @@ const leagueLogo = resolveLogo(match.league_logo);
   </div>
 
   <div class="mb-3 mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-    <div class="flex items-center gap-3 justify-start min-w-0">
+    <div class="flex flex-col items-center gap-2 min-w-0">
       <img src={homeLogo} alt={`Escudo ${match.home_team}`} title={match.home_team} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
-      <div class="font-semibold leading-tight text-gray-900 text-sm sm:text-base md:text-lg line-clamp-2">{match.home_team}</div>
+      <div class="font-semibold leading-tight text-gray-900 text-center text-base md:text-lg">{match.home_team}</div>
     </div>
     <div class="text-center">
       <div class="inline-flex"><span class="badge badge-date">J{match.matchday ?? '—'}</span></div>
       <div class="mt-1 text-[11px] uppercase tracking-wide text-gray-400">vs</div>
     </div>
-    <div class="flex items-center gap-3 justify-end min-w-0">
-      <div class="font-semibold leading-tight text-right text-gray-900 text-sm sm:text-base md:text-lg line-clamp-2">{match.away_team}</div>
+    <div class="flex flex-col items-center gap-2 min-w-0">
       <img src={awayLogo} alt={`Escudo ${match.away_team}`} title={match.away_team} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
+      <div class="font-semibold leading-tight text-gray-900 text-center text-base md:text-lg">{match.away_team}</div>
     </div>
   </div>
 

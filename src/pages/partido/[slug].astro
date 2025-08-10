@@ -58,17 +58,17 @@ const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
 
       <header class="mb-6">
         <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 not-prose">
-          <div class="flex items-center gap-3 justify-start min-w-0">
+          <div class="flex flex-col items-center gap-2 min-w-0">
             {match.home_logo && <img src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.home_team_name}`} title={match.home_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
-            <div class="font-extrabold leading-tight text-gray-900 text-lg md:text-2xl line-clamp-2">{match.home_team_name}</div>
+            <div class="font-extrabold leading-tight text-gray-900 text-center text-xl md:text-2xl">{match.home_team_name}</div>
           </div>
           <div class="text-center">
             <div class="inline-flex"><span class="badge badge-date">J{match.matchday ?? '—'}</span></div>
             <div class="mt-1 text-[11px] uppercase tracking-wide text-gray-400">vs</div>
           </div>
-          <div class="flex items-center gap-3 justify-end min-w-0">
-            <div class="font-extrabold leading-tight text-right text-gray-900 text-lg md:text-2xl line-clamp-2">{match.away_team_name}</div>
+          <div class="flex flex-col items-center gap-2 min-w-0">
             {match.away_logo && <img src={`/${String(match.away_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.away_team_name}`} title={match.away_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
+            <div class="font-extrabold leading-tight text-gray-900 text-center text-xl md:text-2xl">{match.away_team_name}</div>
           </div>
         </div>
         {match.stadium && (
