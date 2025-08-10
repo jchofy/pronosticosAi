@@ -31,55 +31,81 @@ const isPast = match ? matchDate < now : false;
 const isOld = match ? matchDate < new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) : false;
 
 const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'full', timeStyle: 'short' });
+const fmtShort = (s) => {
+  try {
+    const d = new Date(s);
+    const weekday = d.toLocaleDateString('es-ES', { weekday: 'long' });
+    const day = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return `${weekday}, ${day} · ${time}`;
+  } catch { return ''; }
+};
 const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
 ---
 <Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={meta.jsonLd} og={meta.og} noindex={isOld}>
   {match ? (
     <article class="prose prose-sm max-w-none">
-      <div class="mb-2 text-xs text-gray-600 flex items-center gap-2">
-        <a href={`/liga/${match.league_slug}`} class="badge badge-league">{match.league_name}</a>
-        <span class="badge">{match.league_country}</span>
-        <span class="badge badge-date">{fmtDateTime(match.date)}</span>
+      <div class="mb-2 flex items-center justify-between text-xs text-gray-600">
+        <div class="inline-flex items-center gap-1 text-gray-700">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4 text-gray-400"><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm.75-10.44V7a.75.75 0 0 0-1.5 0v5a.75.75 0 0 0 .22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78z"/></svg>
+          <span class="font-medium">{fmtShort(match.date)}</span>
+        </div>
+        <a href={`/liga/${match.league_slug}`} class="inline-flex items-center gap-2">
+          {match.league_logo && <img src={`/${String(match.league_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={match.league_name} class="h-10 w-10 md:h-12 md:w-12 rounded-md bg-white object-contain p-1 shadow-sm" width="48" height="48" loading="lazy" decoding="async" />}
+          <span class="hidden sm:inline text-gray-700 hover:underline">{match.league_name}</span>
+        </a>
       </div>
 
       <header class="mb-6">
-        <h1 class="not-prose text-3xl md:text-4xl font-extrabold tracking-tight text-gradient-brand">{match.home_team_name} <span class="text-gray-400">vs</span> {match.away_team_name}</h1>
+        <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 not-prose">
+          <div class="flex items-center gap-3 justify-start min-w-0">
+            {match.home_logo && <img src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.home_team_name}`} title={match.home_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
+            <div class="font-extrabold leading-tight text-gray-900 text-lg md:text-2xl line-clamp-2">{match.home_team_name}</div>
+          </div>
+          <div class="text-center">
+            <div class="inline-flex"><span class="badge badge-date">J{match.matchday ?? '—'}</span></div>
+            <div class="mt-1 text-[11px] uppercase tracking-wide text-gray-400">vs</div>
+          </div>
+          <div class="flex items-center gap-3 justify-end min-w-0">
+            <div class="font-extrabold leading-tight text-right text-gray-900 text-lg md:text-2xl line-clamp-2">{match.away_team_name}</div>
+            {match.away_logo && <img src={`/${String(match.away_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.away_team_name}`} title={match.away_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
+          </div>
+        </div>
         {match.stadium && (
-          <p class="not-prose text-xs text-gray-500 mt-1">{match.stadium}{match.stadium_capacity ? ` · ${fmtCap(match.stadium_capacity)} espectadores` : ''}</p>
+          <p class="not-prose text-xs text-gray-500">{match.stadium}{match.stadium_capacity ? ` · ${fmtCap(match.stadium_capacity)} espectadores` : ''}</p>
         )}
       </header>
 
       <section class="not-prose card p-5 bg-white/70">
-        <h2 class="text-lg font-bold mb-3">Pronóstico</h2>
         {prediction ? (
-          <div class="space-y-3">
-            {prediction.text && (
-              <p class="text-sm text-gray-800">{prediction.text}</p>
-            )}
+          <div class="space-y-5">
             {prediction.bets && prediction.bets.length > 0 && (
-              <div class="overflow-x-auto">
-                <table class="min-w-full table-auto text-sm">
-                  <thead>
-                    <tr class="text-left text-gray-500">
-                      <th class="py-2 pr-4">Mercado</th>
-                      <th class="py-2 pr-4">Selección</th>
-                      <th class="py-2 pr-4">Cuota</th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-gray-200">
-                    {prediction.bets.map((b) => (
-                      <tr>
-                        <td class="py-2 pr-4">{b.bet_type || '-'}</td>
-                        <td class="py-2 pr-4">{b.selection || '-'}</td>
-                        <td class="py-2 pr-4">{typeof b.odds === 'number' ? b.odds.toFixed(2) : '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div>
+                <h2 class="text-lg font-bold mb-3">Recomendación de apuesta</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {prediction.bets.map((b) => (
+                    <div class="bet-card">
+                      <div class="min-w-0">
+                        <div class="text-sm font-medium text-gray-900 truncate">{b.bet_type || '-'}</div>
+                        <div class="text-xs text-gray-700 truncate">{b.selection || '-'}</div>
+                      </div>
+                      <div class="ml-3 bet-card-odds">
+                        <span class="text-xs text-brand-700">Cuota</span>
+                        <span class="badge badge-date text-sm">{typeof b.odds === 'number' ? b.odds.toFixed(2) : '-'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
-            {prediction.generatedAt && (
-              <p class="text-xs text-gray-500">Actualizado: {new Date(prediction.generatedAt).toLocaleString('es-ES')}</p>
+            {prediction.text && (
+              <div>
+                <h2 class="text-lg font-bold mb-2">Análisis del pronóstico</h2>
+                <p class="text-sm text-gray-800">{prediction.text}</p>
+              </div>
+            )}
+            {(!prediction.bets || prediction.bets.length === 0) && !prediction.text && (
+              <p class="text-sm text-gray-600">Pronóstico próximamente.</p>
             )}
           </div>
         ) : (

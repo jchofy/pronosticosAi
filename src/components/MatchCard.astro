@@ -1,0 +1,63 @@
+---
+// @ts-nocheck
+const { match } = Astro.props;
+
+const resolveLogo = (p) => {
+  if (!p) return null;
+  const clean = String(p).replace(/^\/?public\//, '').replace(/^\//, '');
+  if (clean.startsWith('images/')) return `/${clean}`;
+  return `/${clean}`;
+};
+
+const fmtShort = (s) => {
+  try {
+    const d = new Date(s);
+    const day = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    return `${day} · ${time}`;
+  } catch { return ''; }
+};
+
+const homeLogo = resolveLogo(match.home_logo) || '/logoApp.webp';
+const awayLogo = resolveLogo(match.away_logo) || '/logoApp.webp';
+const leagueLogo = resolveLogo(match.league_logo);
+---
+<a href={`/partido/${match.slug}`} class="card card-hover p-4 block">
+  <div class="mb-2 flex items-center justify-between text-xs text-gray-600">
+    <div class="inline-flex items-center gap-1 text-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4 text-gray-400"><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20zm.75-10.44V7a.75.75 0 0 0-1.5 0v5a.75.75 0 0 0 .22.53l3 3a.75.75 0 1 0 1.06-1.06l-2.78-2.78z"/></svg>
+      <span class="font-medium">{fmtShort(match.date)}</span>
+    </div>
+    {leagueLogo && (
+      <img src={leagueLogo} alt={match.league_name} class="h-12 w-12 md:h-8 md:w-8 rounded-md bg-white object-contain p-0.5" width="32" height="32" loading="lazy" decoding="async" />
+    )}
+  </div>
+
+  <div class="mb-3 mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+    <div class="flex items-center gap-3 justify-start min-w-0">
+      <img src={homeLogo} alt={`Escudo ${match.home_team}`} title={match.home_team} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
+      <div class="font-semibold leading-tight text-gray-900 text-sm sm:text-base md:text-lg line-clamp-2">{match.home_team}</div>
+    </div>
+    <div class="text-center">
+      <div class="inline-flex"><span class="badge badge-date">J{match.matchday ?? '—'}</span></div>
+      <div class="mt-1 text-[11px] uppercase tracking-wide text-gray-400">vs</div>
+    </div>
+    <div class="flex items-center gap-3 justify-end min-w-0">
+      <div class="font-semibold leading-tight text-right text-gray-900 text-sm sm:text-base md:text-lg line-clamp-2">{match.away_team}</div>
+      <img src={awayLogo} alt={`Escudo ${match.away_team}`} title={match.away_team} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
+    </div>
+  </div>
+
+  {match.stadium && (
+    <div class="text-xs text-gray-600 flex items-center gap-2">
+      <span class="badge badge-stadium">{match.stadium}</span>
+      {match.capacity && <span class="text-gray-500">{Number(match.capacity).toLocaleString('es-ES')} espectadores</span>}
+    </div>
+  )}
+  <div class="mt-3 flex items-center justify-between text-sm">
+    <span class="text-gray-500">Ver previa y pronóstico</span>
+    <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5l6 6-6 6-1.4-1.4 3.6-3.6H4v-2h11.7l-3.6-3.6 1.4-1.4z"/></svg>
+  </div>
+</a>
+
+

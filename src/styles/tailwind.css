@@ -15,6 +15,9 @@
   .btn-secondary {
     @apply inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-gray-900 border border-gray-300 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 transition-colors;
   }
+  .btn-sm {
+    @apply text-sm px-3 py-1.5 rounded-md;
+  }
   .btn-ghost {
     @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 text-brand-700 hover:text-brand-800 hover:bg-brand-50 border border-transparent focus:outline-none focus:ring-2 focus:ring-brand-500 transition-colors;
   }
@@ -25,10 +28,16 @@
     @apply badge bg-blue-50 text-blue-700 border-blue-200;
   }
   .badge-date {
-    @apply badge bg-amber-50 text-amber-700 border-amber-200;
+    @apply badge bg-blue-50 text-blue-700 border-blue-200;
   }
   .badge-stadium {
     @apply badge bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+  .bet-card {
+    @apply rounded-xl border border-brand-200 bg-brand-50 p-3 flex items-center justify-between;
+  }
+  .bet-card-odds {
+    @apply inline-flex items-center gap-2;
   }
   .card {
     @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
@@ -47,5 +56,11 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+  }
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 } 

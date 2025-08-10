@@ -1,6 +1,7 @@
 ---
 // @ts-nocheck
 import Base from '../../layouts/Base.astro';
+import MatchCard from '../../components/MatchCard.astro';
 import { getLeagueBySlug } from '../../lib/leagues.js';
 import { getUpcomingMatchesByLeague, getRecentMatchesByLeague } from '../../lib/matches.js';
 import { metaBasic } from '../../lib/seo.js';
@@ -45,16 +46,7 @@ const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'med
           <p class="text-sm text-gray-600">No hay partidos próximos.</p>
         ) : (
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {upcoming.map((m) => (
-              <a href={`/partido/${m.slug}`} class="card p-4 hover:shadow-md transition">
-                <div class="flex items-center justify-between">
-                  <h3 class="font-semibold">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</h3>
-                  <span class="text-xs text-gray-500">J{m.matchday ?? '—'}</span>
-                </div>
-                <p class="text-sm text-gray-600">{m.league_name} · {m.league_country}</p>
-                <p class="text-sm text-gray-600">{fmtDateTime(m.date)}</p>
-              </a>
-            ))}
+            {upcoming.map((m) => (<MatchCard match={m} />))}
           </div>
         )}
       </section>
