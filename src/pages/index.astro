@@ -23,7 +23,7 @@ const meta = metaBasic(
 );
 
 const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
-const visible = Array.isArray(upcoming) ? upcoming.slice(0, 5) : [];
+const visible = Array.isArray(upcoming) ? upcoming.slice(0, 4) : [];
 const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
 ---
 <Base { ...meta }>
@@ -97,13 +97,20 @@ const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
     ) : (
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {visible.map((m) => {
-          const homeLogo = m.home_logo ? `/${m.home_logo.replace(/^\//, '')}` : '/images/placeholder_team.png';
-          const awayLogo = m.away_logo ? `/${m.away_logo.replace(/^\//, '')}` : '/images/placeholder_team.png';
+          const resolveLogo = (p) => {
+            if (!p) return null;
+            const clean = String(p).replace(/^\/?public\//, '').replace(/^\//, '');
+            // If the original path points to the project-level images folder, serve from /images/ under public
+            if (clean.startsWith('images/')) return `/${clean}`;
+            return `/${clean}`;
+          };
+          const homeLogo = resolveLogo(m.home_logo) || '/logoApp.webp';
+          const awayLogo = resolveLogo(m.away_logo) || '/logoApp.webp';
           return (
             <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
               <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                 <div class="flex items-center gap-3 justify-start">
-                  <img src={homeLogo} alt={`Escudo ${m.home_team}`} class="h-12 w-12 rounded-md object-contain bg-white border border-gray-200 p-1" width="48" height="48" loading="lazy" decoding="async" />
+                  <img src={homeLogo} alt={`Escudo ${m.home_team}`} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
                   <div class="font-semibold text-base md:text-lg leading-tight text-gray-900">{m.home_team}</div>
                 </div>
                 <div class="text-center">
@@ -112,7 +119,7 @@ const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
                 </div>
                 <div class="flex items-center gap-3 justify-end">
                   <div class="font-semibold text-base md:text-lg leading-tight text-right text-gray-900">{m.away_team}</div>
-                  <img src={awayLogo} alt={`Escudo ${m.away_team}`} class="h-12 w-12 rounded-md object-contain bg-white border border-gray-200 p-1" width="48" height="48" loading="lazy" decoding="async" />
+                  <img src={awayLogo} alt={`Escudo ${m.away_team}`} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />
                 </div>
               </div>
               <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
