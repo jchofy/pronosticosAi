@@ -7,7 +7,8 @@ export const getUpcomingMatches = async (hours = 72) => {
   const sql = `
     SELECT m.slug, m.date, m.matchday,
            l.scrapper_slug AS league_slug, l.name AS league_name, l.country AS league_country,
-           ht.name AS home_team, at.name AS away_team,
+            ht.name AS home_team, at.name AS away_team,
+            ht.logo_file AS home_logo, at.logo_file AS away_logo,
            ht.stadium_name AS stadium, ht.capacity AS capacity
     FROM matches m
     JOIN teams ht ON m.home_team_id = ht.id

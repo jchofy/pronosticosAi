@@ -23,6 +23,8 @@ const meta = metaBasic(
 );
 
 const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'medium', timeStyle: 'short' });
+const visible = Array.isArray(upcoming) ? upcoming.slice(0, 5) : [];
+const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
 ---
 <Base { ...meta }>
   <!-- Hero -->
@@ -86,40 +88,54 @@ const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'med
 
   <!-- Upcoming matches -->
   <section class="mb-12">
-    <div class="mb-4 flex items-end justify-between">
-      <div>
-        <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Próximos partidos</h2>
-        <p class="text-sm text-gray-600 mt-1">Analítica y pronósticos en las próximas 72 horas</p>
-      </div>
-      <a href="/resultados" class="btn-secondary">Ver todos</a>
+    <div class="mb-4">
+      <h2 class="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">Próximos partidos</h2>
+      <p class="text-sm text-gray-600 mt-1">Analítica y pronósticos en las próximas 72 horas</p>
     </div>
     { error ? (
       <div class="card p-6 text-red-600">{error}</div>
     ) : (
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {upcoming.map((m) => (
-          <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
-            <div class="flex items-center justify-between mb-1">
-              <h3 class="font-semibold text-lg">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</h3>
-              <span class="badge badge-date">J{m.matchday ?? '—'}</span>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
-              <span class="badge badge-league">{m.league_name}</span>
-              <span class="badge">{m.league_country}</span>
-              <span class="badge badge-date">{fmtDateTime(m.date)}</span>
-            </div>
-            {m.stadium && (
-              <div class="text-xs text-gray-600 flex items-center gap-2">
-                <span class="badge badge-stadium">{m.stadium}</span>
-                {m.capacity && <span class="text-gray-500">{Number(m.capacity).toLocaleString('es-ES')} espectadores</span>}
+        {visible.map((m) => {
+          const homeLogo = m.home_logo ? `/${m.home_logo.replace(/^\//, '')}` : '/images/placeholder_team.png';
+          const awayLogo = m.away_logo ? `/${m.away_logo.replace(/^\//, '')}` : '/images/placeholder_team.png';
+          return (
+            <a href={`/partido/${m.slug}`} class="card card-hover p-4 block">
+              <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                <div class="flex items-center gap-3 justify-start">
+                  <img src={homeLogo} alt={`Escudo ${m.home_team}`} class="h-12 w-12 rounded-md object-contain bg-white border border-gray-200 p-1" width="48" height="48" loading="lazy" decoding="async" />
+                  <div class="font-semibold text-base md:text-lg leading-tight text-gray-900">{m.home_team}</div>
+                </div>
+                <div class="text-center">
+                  <div class="inline-flex"><span class="badge badge-date">J{m.matchday ?? '—'}</span></div>
+                  <div class="mt-1 text-[11px] uppercase tracking-wide text-gray-400">vs</div>
+                </div>
+                <div class="flex items-center gap-3 justify-end">
+                  <div class="font-semibold text-base md:text-lg leading-tight text-right text-gray-900">{m.away_team}</div>
+                  <img src={awayLogo} alt={`Escudo ${m.away_team}`} class="h-12 w-12 rounded-md object-contain bg-white border border-gray-200 p-1" width="48" height="48" loading="lazy" decoding="async" />
+                </div>
               </div>
-            )}
-            <div class="mt-3 flex items-center justify-between text-sm">
-              <span class="text-gray-500">Ver previa y pronóstico</span>
-              <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5l6 6-6 6-1.4-1.4 3.6-3.6H4v-2h11.7l-3.6-3.6 1.4-1.4z"/></svg>
-            </div>
-          </a>
-        ))}
+              <div class="flex flex-wrap items-center gap-2 text-xs mb-2">
+                <span class="badge badge-league">{m.league_name}</span>
+                <span class="badge">{m.league_country}</span>
+                <span class="badge badge-date">{fmtDateTime(m.date)}</span>
+              </div>
+              {m.stadium && (
+                <div class="text-xs text-gray-600 flex items-center gap-2">
+                  <span class="badge badge-stadium">{m.stadium}</span>
+                  {m.capacity && <span class="text-gray-500">{Number(m.capacity).toLocaleString('es-ES')} espectadores</span>}
+                </div>
+              )}
+              <div class="mt-3 flex items-center justify-between text-sm">
+                <span class="text-gray-500">Ver previa y pronóstico</span>
+                <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 5.5l6 6-6 6-1.4-1.4 3.6-3.6H4v-2h11.7l-3.6-3.6 1.4-1.4z"/></svg>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+      <div class="mt-6 flex items-center justify-center">
+        <a href="/resultados" class="btn-ghost">Ver todos los partidos{remaining > 0 ? ` (${remaining})` : ''}</a>
       </div>
     )}
   </section>
