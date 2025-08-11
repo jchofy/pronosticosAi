@@ -1,7 +1,7 @@
 ---
 // @ts-nocheck
 import Base from '../../layouts/Base.astro';
-import { getMatchBySlug, getPredictionForMatch } from '../../lib/matches.js';
+import { getMatchBySlug } from '../../lib/matches.js';
 import { pageMetaForMatch } from '../../lib/seo.js';
 import { SITE_URL } from '../../lib/env.js';
 import { getActiveBettingHouses } from '../../lib/bettingHouses.js';
@@ -9,8 +9,6 @@ import { getActiveBettingHouses } from '../../lib/bettingHouses.js';
 const { slug } = Astro.params;
 /** @type {any} */
 let match = null;
-/** @type {{ text?: string|null; generatedAt?: string; bets?: Array<{ bet_type: string; selection: string; odds: number }> } | null} */
-let prediction = null;
 /** @type {Array<{ id:number; name:string; website_url:string; affiliate_code?: string|null; affiliate_url?: string|null; contact_email?: string|null; color:string; logo_file?: string|null; active?: number }>} */
 let bettingHouses = [];
 
@@ -19,7 +17,6 @@ try {
   if (!match) {
     throw new Response('Not found', { status: 404 });
   }
-  prediction = await getPredictionForMatch(match.id);
   bettingHouses = await getActiveBettingHouses();
 } catch (e) {
   if (e instanceof Response && e.status === 404) throw e;
@@ -65,7 +62,7 @@ const getContrastTextClass = (hex) => {
   return luminance > 0.6 ? 'text-gray-900' : 'text-white';
 };
 ---
-<Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={meta.jsonLd} og={meta.og} noindex={isOld}>
+<Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={[meta.jsonLd, meta.paywallJsonLd]} og={meta.og} noindex={isOld}>
   {match ? (
     <article class="prose prose-sm max-w-none">
       <div class="mb-2 flex items-center justify-between text-xs text-gray-600">
@@ -99,41 +96,203 @@ const getContrastTextClass = (hex) => {
         )}
       </header>
 
-      <section class="not-prose card p-5 bg-white/70">
-        {prediction ? (
-          <div class="space-y-5">
-            {prediction.bets && prediction.bets.length > 0 && (
-              <div>
-                <h2 class="text-lg font-bold mb-3">Recomendación de apuesta</h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {prediction.bets.map((b) => (
-                    <div class="bet-card">
-                      <div class="min-w-0">
-                        <div class="text-sm font-medium text-gray-900 truncate">{b.bet_type || '-'}</div>
-                        <div class="text-xs text-gray-700 truncate">{b.selection || '-'}</div>
-                      </div>
-                      <div class="ml-3 bet-card-odds">
-                        <span class="text-xs text-brand-700">Cuota</span>
-                        <span class="badge badge-date text-sm">{typeof b.odds === 'number' ? b.odds.toFixed(2) : '-'}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {prediction.text && (
-              <div>
-                <h2 class="text-lg font-bold mb-2">Análisis del pronóstico</h2>
-                <p class="text-sm text-gray-800">{prediction.text}</p>
-              </div>
-            )}
-            {(!prediction.bets || prediction.bets.length === 0) && !prediction.text && (
-              <p class="text-sm text-gray-600">Pronóstico próximamente.</p>
-            )}
+      <section class="not-prose card p-6 md:p-7 bg-white/80">
+        <h2 class="text-xl md:text-2xl font-extrabold">Pronóstico</h2>
+        <p class="mt-1 text-sm text-gray-700">1 pronóstico gratis al día. Pulsa para revelar la apuesta recomendada y el análisis.</p>
+        <div class="mt-4">
+          <button id="btn-view-prediction" class="btn-primary" data-match-id={match.id} data-home-name={String(match.home_team_name || match.home_team || '')} data-away-name={String(match.away_team_name || match.away_team || '')}>Ver pronóstico</button>
+          <div id="free-hint" class="mt-2 text-xs text-gray-600 hidden">Te queda 1 gratis hoy</div>
+        </div>
+        <div id="prediction-container" class="mt-5 hidden">
+          <div id="prediction-bets" class="hidden"></div>
+          <div class="mt-5 paywall text-sm text-gray-900 whitespace-pre-line" id="prediction-text"></div>
+        </div>
+        <div id="prediction-error" class="mt-3 text-sm text-red-600 hidden" role="alert"></div>
+        <div id="prediction-upsell" class="mt-4 hidden">
+          <div class="rounded-xl border border-gray-200 p-3 bg-gray-50">
+            <p class="text-sm text-gray-700">Este pronóstico es de pago. Puedes comprarlo por separado o suscribirte a un plan.</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <a id="btn-buy-once" class="btn-primary btn-sm" href="#">Comprar este pronóstico</a>
+              <a class="btn-secondary btn-sm" href="/suscribirme">Ver planes</a>
+            </div>
           </div>
-        ) : (
-          <p class="text-sm text-gray-600">Pronóstico próximamente.</p>
-        )}
+        </div>
+        <script>
+          (function(){
+            /** @type {HTMLButtonElement|null} */
+            const btn = document.getElementById('btn-view-prediction');
+            /** @type {HTMLElement|null} */
+            const outWrap = document.getElementById('prediction-container');
+            /** @type {HTMLElement|null} */
+            const out = document.getElementById('prediction-text');
+            const betsEl = document.getElementById('prediction-bets');
+            /** @type {HTMLElement|null} */
+            const err = document.getElementById('prediction-error');
+            /** @type {HTMLElement|null} */
+            const upsell = document.getElementById('prediction-upsell');
+            if (!btn) return;
+            const matchIdAttr = btn.getAttribute('data-match-id');
+            const matchId = matchIdAttr ? Number(matchIdAttr) : NaN;
+            const teamHome = btn.getAttribute('data-home-name') || '';
+            const teamAway = btn.getAttribute('data-away-name') || '';
+            const setLoading = (v) => { v ? btn.setAttribute('aria-busy','true') : btn.removeAttribute('aria-busy'); try { (btn instanceof HTMLButtonElement) && (btn.disabled = Boolean(v)); } catch(_){} };
+            const humanizeBet = (bet) => {
+              const typeRaw = String(bet?.bet_type || '').toLowerCase();
+              const selRaw = String(bet?.selection || '').toLowerCase();
+              const normalize = (s) => s.replace(/\s+/g, '_').replace(/\./g, '_');
+              const type = normalize(typeRaw);
+              const sel = normalize(selRaw);
+              if (type.includes('1x2') || type === '1x2') {
+                if (['local','home','1'].includes(sel)) return { title: `${teamHome}`, subtitle: 'Mercado 1X2' };
+                if (['visitante','away','2'].includes(sel)) return { title: `${teamAway}`, subtitle: 'Mercado 1X2' };
+                if (['empate','x','draw'].includes(sel)) return { title: 'Empate', subtitle: 'Mercado 1X2' };
+                return { title: 'Mercado 1X2', subtitle: bet?.selection || '' };
+              }
+              if (type.includes('ambos_anotan') || type.includes('btts')) {
+                const si = ['si','sí','yes','y'].includes(sel);
+                const no = ['no','n'].includes(sel);
+                return { title: `Ambos anotan: ${si ? 'Sí' : (no ? 'No' : (bet?.selection || ''))}`, subtitle: 'Goles' };
+              }
+              const parseOverUnder = (s) => {
+                const m = s.match(/(over|under)[ _]?(\d+)[ _]?(\d)/);
+                if (m) { return { kind: m[1], value: `${m[2]}.${m[3]}` }; }
+                const m2 = s.match(/(over|under)[ _]?(\d+(?:[\._]\d+)?)/);
+                if (m2) { return { kind: m2[1], value: m2[2].replace('_','.') }; }
+                return null;
+              };
+              if (type.includes('over_under') || type.includes('goles') || type.includes('over') || type.includes('under') || sel.startsWith('over_') || sel.startsWith('under_') || type.startsWith('over_') || type.startsWith('under_')) {
+                const info = parseOverUnder(sel) || parseOverUnder(type);
+                if (info) {
+                  const txt = info.kind === 'over' ? `Más de ${info.value} goles` : `Menos de ${info.value} goles`;
+                  return { title: txt, subtitle: 'Total de goles' };
+                }
+              }
+              // Fallback
+              const nice = (s) => s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+              return { title: nice(String(bet?.bet_type || '-')), subtitle: nice(String(bet?.selection || '')) };
+            };
+
+            const renderBetCard = (b) => {
+              const h = humanizeBet(b);
+              const odds = (typeof b?.odds === 'number') ? b.odds.toFixed(2) : '-';
+              return `
+                <div class=\"bet-card bet-card-strong\">
+                  <div class=\"min-w-0\">
+                    <div class=\"text-sm font-semibold text-gray-900 truncate\">${h.title}</div>
+                    <div class=\"text-xs text-gray-700 truncate\">${h.subtitle}</div>
+                  </div>
+                  <div class=\"ml-3 bet-card-odds\">
+                    <span class=\"odds-badge\">${odds}</span>
+                  </div>
+                </div>`;
+            };
+            const setHint = (n) => {
+              const hint = document.getElementById('free-hint');
+              if (!hint) return;
+              const num = Number(n);
+              if (Number.isFinite(num)) {
+                hint.textContent = `Te queda ${num} gratis hoy`;
+                hint.classList.remove('hidden');
+              }
+            };
+            const updateFreeHint = async () => {
+              try {
+                const st = await fetch('/api/predictions/status', { credentials: 'include' }).then(r => r.json());
+                if (Number(st?.free_remaining) >= 0) setHint(Number(st.free_remaining));
+              } catch {}
+            };
+            updateFreeHint();
+
+            const renderPrediction = (data) => {
+              if (!data) return false;
+              // bets first
+              try {
+                const bets = Array.isArray(data?.bets) ? data.bets : [];
+                if (betsEl && bets.length) {
+                  betsEl.classList.remove('hidden');
+                  betsEl.innerHTML = '<div class="flex items-center justify-between mb-3">\
+                      <h3 class="text-lg font-bold">Apuesta recomendada</h3>\
+                    </div>' +
+                    '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                    bets.map(renderBetCard).join('') + '</div>';
+                }
+              } catch {}
+              if (out) out.textContent = data?.text || 'Pronóstico próximamente.';
+              outWrap && outWrap.classList.remove('hidden');
+              btn && btn.classList.add('hidden');
+              // refresh hint after reveal (may drop to 0)
+              updateFreeHint();
+              return true;
+            };
+
+            // Auto-open if user already has access (subscription, purchase, or prior grant)
+            (async () => {
+              try {
+                const resp = await fetch(`/api/predictions/${matchId}`, { credentials: 'include' });
+                if (resp.ok) {
+                  const data = await resp.json();
+                  if (data && (data.text || (Array.isArray(data.bets) && data.bets.length))) {
+                    renderPrediction(data);
+                  }
+                }
+              } catch {}
+            })();
+
+            btn.addEventListener('click', async () => {
+              setLoading(true);
+              err && err.classList.add('hidden');
+              upsell && upsell.classList.add('hidden');
+              try {
+                const acc = await fetch('/api/predictions/access', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ matchId })
+                }).then(r => r.json());
+                if (acc.status === 'granted') {
+                  const data = await fetch(`/api/predictions/${matchId}`, { credentials: 'include' }).then(r => r.json());
+                  renderPrediction(data);
+                } else if (acc.status === 'payment_required') {
+                  upsell && upsell.classList.remove('hidden');
+                  if (err) {
+                    if (acc.reason === 'daily_free_limit_reached') {
+                      err.textContent = 'Has consumido tu pronóstico gratis de hoy.';
+                      setHint(0);
+                    } else {
+                      err.textContent = 'No tienes acceso a este pronóstico. Suscríbete o compra este partido para verlo.';
+                    }
+                    err.classList.remove('hidden');
+                  }
+                } else {
+                  // Si ya consumió gratis hoy, repetimos GET por si fue concedido en una sesión previa
+                  try {
+                    const data = await fetch(`/api/predictions/${matchId}`, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+                    if (data && (data.text || (Array.isArray(data.bets) && data.bets.length))) {
+                      const bets = Array.isArray(data?.bets) ? data.bets : [];
+                      if (betsEl && bets.length) {
+                        betsEl.classList.remove('hidden');
+                        betsEl.innerHTML = '<div class="flex items-center justify-between mb-3">\
+                            <h3 class="text-lg font-bold">Apuesta recomendada</h3>\
+                          </div>' +
+                          '<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">' +
+                          bets.map(renderBetCard).join('') + '</div>';
+                      }
+                      if (out) out.textContent = data?.text || 'Pronóstico próximamente.';
+                      outWrap && outWrap.classList.remove('hidden');
+                      btn.classList.add('hidden');
+                      return;
+                    }
+                  } catch {}
+                  if (err) { err.textContent = 'No tienes acceso a este pronóstico. Suscríbete o compra este partido para verlo.'; err.classList.remove('hidden'); }
+                }
+              } catch (e) {
+                if (err) { err.textContent = 'No hemos podido comprobar tu acceso ahora mismo. Inténtalo de nuevo en unos segundos.'; err.classList.remove('hidden'); }
+              } finally {
+                setLoading(false);
+              }
+            });
+          })();
+        </script>
       </section>
 
       <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -15,13 +15,16 @@ export const getUpcomingMatches = async (hours = 72) => {
     JOIN teams ht ON m.home_team_id = ht.id
     JOIN teams at ON m.away_team_id = at.id
     JOIN leagues l ON m.league_id = l.id
-    WHERE m.date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? HOUR)
+    WHERE CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid')
+          BETWEEN CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid')
+              AND DATE_ADD(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL ? HOUR)
     ORDER BY m.date ASC;
   `;
   return query(sql, [Number(hours) || 72]);
 };
 
-export const getUpcomingMatchesByLeague = async (leagueSlug, hours = 168) => {
+export const getUpcomingMatchesByLeague = async (leagueSlug) => {
+  // Mostrar solo partidos con predicción activa (prediccion = '1') y cuya fecha en horario de Madrid sea >= (ahora_ES - 30 minutos)
   const sql = `
     SELECT m.slug, m.date, m.matchday,
            l.scrapper_slug AS league_slug, l.name AS league_name, l.country AS league_country,
@@ -34,10 +37,31 @@ export const getUpcomingMatchesByLeague = async (leagueSlug, hours = 168) => {
     JOIN teams at ON m.away_team_id = at.id
     JOIN leagues l ON m.league_id = l.id
     WHERE l.scrapper_slug = ?
-      AND m.date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL ? HOUR)
+      AND m.prediccion = '1'
+      AND CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid') >= DATE_SUB(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL 30 MINUTE)
     ORDER BY m.date ASC;
   `;
-  return query(sql, [leagueSlug, Number(hours) || 168]);
+  return query(sql, [leagueSlug]);
+};
+
+export const getUpcomingPredictedMatches = async () => {
+  // Partidos de todas las ligas con predicción activa y fecha en horario de Madrid >= ahora - 30 min
+  const sql = `
+    SELECT m.slug, m.date, m.matchday,
+           l.scrapper_slug AS league_slug, l.name AS league_name, l.country AS league_country,
+           l.logo_file AS league_logo,
+           ht.name AS home_team, at.name AS away_team,
+           ht.logo_file AS home_logo, at.logo_file AS away_logo,
+           ht.stadium_name AS stadium, ht.capacity AS capacity
+    FROM matches m
+    JOIN teams ht ON m.home_team_id = ht.id
+    JOIN teams at ON m.away_team_id = at.id
+    JOIN leagues l ON m.league_id = l.id
+    WHERE m.prediccion = '1'
+      AND CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid') >= DATE_SUB(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL 30 MINUTE)
+    ORDER BY m.date ASC;
+  `;
+  return query(sql);
 };
 
 export const getRecentMatches = async (days = 30, page = 1, pageSize = 50) => {
@@ -52,7 +76,9 @@ export const getRecentMatches = async (days = 30, page = 1, pageSize = 50) => {
     JOIN teams ht ON m.home_team_id = ht.id
     JOIN teams at ON m.away_team_id = at.id
     JOIN leagues l ON m.league_id = l.id
-    WHERE m.date BETWEEN DATE_SUB(NOW(), INTERVAL ? DAY) AND NOW()
+    WHERE CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid')
+          BETWEEN DATE_SUB(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL ? DAY)
+              AND CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid')
     ORDER BY m.date DESC
     LIMIT ? OFFSET ?;
   `;
@@ -74,7 +100,9 @@ export const getRecentMatchesByLeague = async (leagueSlug, days = 30, page = 1, 
     JOIN teams at ON m.away_team_id = at.id
     JOIN leagues l ON m.league_id = l.id
     WHERE l.scrapper_slug = ?
-      AND m.date BETWEEN DATE_SUB(NOW(), INTERVAL ? DAY) AND NOW()
+      AND CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid')
+          BETWEEN DATE_SUB(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL ? DAY)
+              AND CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid')
     ORDER BY m.date DESC
     LIMIT ? OFFSET ?;
   `;

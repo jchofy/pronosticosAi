@@ -21,7 +21,7 @@ export async function GET() {
     };
 
     add('/', { changefreq: 'hourly', priority: 0.7 });
-    add('/resultados', { changefreq: 'daily', priority: 0.6 });
+    add('/proximos', { changefreq: 'hourly', priority: 0.6 });
     for (const l of leagues) {
       add(`/liga/${l.slug}`, { changefreq: 'hourly', priority: 0.6 });
       add(`/clasificacion/${l.slug}`, { changefreq: 'daily', priority: 0.5 });

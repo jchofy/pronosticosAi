@@ -1,4 +1,5 @@
 ---
+// @ts-nocheck
 import { SITE_URL } from '../lib/env.js';
 import '../styles/tailwind.css';
 const {
@@ -76,9 +77,9 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
             <span>Ligas</span>
           </a>
-          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/resultados') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/resultados') ? 'page' : undefined} href="/resultados">
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/proximos') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/proximos') ? 'page' : undefined} href="/proximos">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
-            <span>Resultados</span>
+            <span>Próximos</span>
           </a>
           <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/clasificacion') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
@@ -115,9 +116,9 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h7"/></svg>
           Ligas
         </a>
-        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/resultados') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/resultados') ? 'page' : undefined} href="/resultados">
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/proximos') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/proximos') ? 'page' : undefined} href="/proximos">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
-          Resultados
+          Próximos
         </a>
         <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
@@ -137,7 +138,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         <p>© {new Date().getFullYear()} PronosticosIA — Todos los derechos reservados</p>
         <div class="flex items-center gap-4">
           <a href="/sitemap.xml" class="hover:text-gray-700">Sitemap</a>
-          <a href="/resultados" class="hover:text-gray-700">Resultados</a>
+          <a href="/proximos" class="hover:text-gray-700">Próximos</a>
           <a href="/ligas" class="hover:text-gray-700">Ligas</a>
         </div>
       </div>
@@ -152,7 +153,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         const main = document.getElementById('app-main');
         const footer = document.getElementById('app-footer');
         /** @type {HTMLElement|null} */
-        let lastFocus = null;
+        let lastFocus = /** @type {HTMLElement|null} */ (null);
 
         if (!openBtn || !drawer || !overlay) return;
 
@@ -170,7 +171,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         };
 
         const open = () => {
-          lastFocus = document.activeElement;
+          lastFocus = (document.activeElement instanceof HTMLElement) ? document.activeElement : null;
           drawer.classList.remove('-translate-x-full');
           overlay.classList.remove('opacity-0', 'pointer-events-none');
           openBtn.setAttribute('aria-expanded', 'true');
@@ -180,7 +181,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           document.body.style.overflow = 'hidden';
           main && main.setAttribute('aria-hidden', 'true');
           footer && footer.setAttribute('aria-hidden', 'true');
-          const focusables = getFocusable();
+          const focusables = /** @type {HTMLElement[]} */ (getFocusable());
           if (focusables.length) focusables[0].focus();
         };
         const close = () => {
@@ -193,12 +194,12 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           document.body.style.overflow = '';
           main && main.removeAttribute('aria-hidden');
           footer && footer.removeAttribute('aria-hidden');
-          try { (lastFocus && 'focus' in lastFocus) && lastFocus.focus(); } catch (_) {}
+          try { (lastFocus && typeof lastFocus.focus === 'function') && lastFocus.focus(); } catch (_) {}
         };
 
         const trap = (e) => {
           if (e.key !== 'Tab') return;
-          const focusables = Array.from(getFocusable());
+          const focusables = /** @type {HTMLElement[]} */ (Array.from(getFocusable()));
           if (!focusables.length) return;
           const first = focusables[0];
           const last = focusables[focusables.length - 1];

@@ -58,5 +58,17 @@ export const pageMetaForMatch = (match, siteUrl) => {
     type: 'article',
     url: canonical,
   };
-  return { title, description, canonical, jsonLd, og };
+  // Extra: paywalled content marker (to be merged at page level)
+  const paywallJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Pronóstico del partido',
+    isAccessibleForFree: 'false',
+    hasPart: {
+      '@type': 'WebPageElement',
+      isAccessibleForFree: 'false',
+      cssSelector: '.paywall'
+    }
+  };
+  return { title, description, canonical, jsonLd, og, paywallJsonLd };
 }; 

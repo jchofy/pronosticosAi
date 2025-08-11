@@ -50,7 +50,7 @@ const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
             Diseñado para apostar mejor, disfrutar más y no perderte ningún encuentro relevante.
           </p>
           <div class="mt-5 flex flex-col sm:flex-row gap-3">
-            <a href="/resultados" class="btn-primary">Ver próximos partidos</a>
+            <a href="/proximos" class="btn-primary">Ver próximos partidos</a>
             <a href="/ligas" class="btn-secondary">Explorar ligas</a>
           </div>
           <div class="mt-6 grid grid-cols-3 gap-4 text-center text-xs text-gray-600">
@@ -108,7 +108,7 @@ const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
         {visible.map((m) => (<MatchCard match={m} />))}
       </div>
       <div class="mt-6 flex items-center justify-center">
-        <a href="/resultados" class="btn-ghost">Ver todos los partidos{remaining > 0 ? ` (${remaining})` : ''}</a>
+        <a href="/proximos" class="btn-ghost">Ver todos los partidos</a>
       </div>
     )}
   </section>

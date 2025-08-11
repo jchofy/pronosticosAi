@@ -1,0 +1,39 @@
+---
+// @ts-nocheck
+import Base from '../layouts/Base.astro';
+import MatchCard from '../components/MatchCard.astro';
+import { getUpcomingPredictedMatches } from '../lib/matches.js';
+import { metaBasic } from '../lib/seo.js';
+import { SITE_URL } from '../lib/env.js';
+
+/** @type {any[]} */
+let upcoming = [];
+/** @type {string|null} */
+let error = null;
+try {
+  upcoming = await getUpcomingPredictedMatches();
+} catch (e) {
+  error = 'Service unavailable';
+  Astro.response.status = 503;
+}
+
+const siteUrl = SITE_URL;
+const meta = metaBasic('Próximos partidos con pronóstico', 'Todos los partidos próximos con pronóstico activo, actualizados en horario de Madrid.', `${siteUrl}/proximos`);
+---
+<Base { ...meta }>
+  <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">Próximos partidos</h1>
+  { error ? (
+    <div class="card p-6 text-red-600">{error}</div>
+  ) : (
+    <>
+      {upcoming.length === 0 ? (
+        <p class="text-sm text-gray-600">No hay partidos próximos con pronóstico.</p>
+      ) : (
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {upcoming.map((m) => (<MatchCard match={m} />))}
+        </div>
+      )}
+    </>
+  )}
+</Base>
+

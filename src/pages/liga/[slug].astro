@@ -20,7 +20,7 @@ let error = null;
 try {
   league = await getLeagueBySlug(slug);
   if (!league) throw new Error('League not found');
-  upcoming = await getUpcomingMatchesByLeague(slug, 168);
+  upcoming = await getUpcomingMatchesByLeague(slug);
   recent = await getRecentMatchesByLeague(slug, 30, 1, 50);
 } catch (e) {
   error = 'Service unavailable';
@@ -41,42 +41,12 @@ const fmtDateTime = (s) => new Date(s).toLocaleString('es-ES', { dateStyle: 'med
   ) : (
     <>
       <section class="mb-8">
-        <h2 class="text-xl font-bold mb-3">Próximos (0–168 h)</h2>
+        <h2 class="text-xl font-bold mb-3">Próximos partidos</h2>
         {upcoming.length === 0 ? (
           <p class="text-sm text-gray-600">No hay partidos próximos.</p>
         ) : (
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {upcoming.map((m) => (<MatchCard match={m} />))}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 class="text-xl font-bold mb-3">Recientes (últimos 30 días)</h2>
-        {recent.rows.length === 0 ? (
-          <p class="text-sm text-gray-600">No hay resultados recientes.</p>
-        ) : (
-          <div class="overflow-x-auto card">
-            <table class="min-w-full table-auto divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Partido</th>
-                  <th class="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200 bg-white">
-                {recent.rows.map((m) => (
-                  <tr>
-                    <td class="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{fmtDateTime(m.date)}</td>
-                    <td class="px-4 py-3 text-sm text-gray-900">{m.home_team} <span class="text-gray-400">vs</span> {m.away_team}</td>
-                    <td class="px-4 py-3 text-right">
-                      <a href={`/partido/${m.slug}`} class="text-brand-700 hover:underline">Ver ficha</a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         )}
       </section>
