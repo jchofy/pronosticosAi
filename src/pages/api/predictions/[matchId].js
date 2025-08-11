@@ -30,6 +30,24 @@ export async function GET({ request, params, cookies }) {
       return new Response(JSON.stringify(data || { text: null }), { status: 200, headers: { 'Cache-Control': 'private, max-age=120' } });
     }
 
+    // New device same network: if any subject with same IP has an access log for this match today, allow read
+    try {
+      const ipGrant = await query(
+        `SELECT pal.id
+         FROM prediction_access_logs pal
+         JOIN subject_fingerprints sf ON sf.subject_id = pal.subject_id
+         WHERE pal.match_id = ?
+           AND DATE(pal.accessed_at) = ?
+           AND sf.ip_hash = ?
+         LIMIT 1`,
+        [matchId, today, ipHash]
+      );
+      if (ipGrant.length) {
+        const data = await getPredictionForMatch(matchId);
+        return new Response(JSON.stringify(data || { text: null }), { status: 200, headers: { 'Cache-Control': 'private, max-age=120' } });
+      }
+    } catch {}
+
     // Has subscription (quota might have been consumed in /access)
     const sub = await findActiveSubscription(subjectId);
     if (sub) {
