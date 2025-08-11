@@ -132,6 +132,7 @@ const getContrastTextClass = (hex) => {
         </div>
         <script>
           (function(){
+            const boot = () => {
             /** @type {HTMLButtonElement|null} */
             const btn = document.getElementById('btn-view-prediction');
             /** @type {HTMLElement|null} */
@@ -239,7 +240,7 @@ const getContrastTextClass = (hex) => {
             };
 
             // Auto-open if user already has access (subscription, purchase, or prior grant)
-            (async () => {
+            const autoOpen = async () => {
               try {
                 const resp = await fetch(`/api/predictions/${matchId}`, { credentials: 'include' });
                 if (resp.ok) {
@@ -249,7 +250,13 @@ const getContrastTextClass = (hex) => {
                   }
                 }
               } catch {}
-            })();
+            };
+            if ('requestIdleCallback' in window) {
+              // @ts-ignore
+              window.requestIdleCallback(autoOpen);
+            } else {
+              setTimeout(autoOpen, 0);
+            }
 
             btn.addEventListener('click', async () => {
               setLoading(true);
@@ -304,11 +311,18 @@ const getContrastTextClass = (hex) => {
                 setLoading(false);
               }
             });
+            };
+            if ('requestIdleCallback' in window) {
+              // @ts-ignore
+              window.requestIdleCallback(boot);
+            } else {
+              setTimeout(boot, 0);
+            }
           })();
         </script>
       </section>
 
-      <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4" style="content-visibility:auto;contain-intrinsic-size:1px 800px;">
         {/* Local team card */}
         <div class="card card-hover overflow-hidden">
           <div class="bg-gradient-to-r from-brand-50 to-white px-4 pt-4 pb-3 border-b border-gray-100">
@@ -441,7 +455,7 @@ const getContrastTextClass = (hex) => {
         </section>
 
       {bettingHouses && bettingHouses.length > 0 && (
-        <section class="not-prose mt-8">
+        <section class="not-prose mt-8" style="content-visibility:auto;contain-intrinsic-size:1px 600px;">
           <h2 class="text-lg font-bold mb-3">Casas recomendadas para apostar</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {bettingHouses.map((bh) => {
