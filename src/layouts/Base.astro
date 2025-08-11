@@ -45,8 +45,11 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
     <meta name="twitter:description" content={ogDescription} />
     <meta name="twitter:image" content={ogImage} />
 
-    {jsonLd && (
-      <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+    {jsonLd && (Array.isArray(jsonLd)
+      ? jsonLd.filter(Boolean).map((item) => (
+          <script type="application/ld+json" set:html={JSON.stringify(item)} />
+        ))
+      : <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     )}
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
