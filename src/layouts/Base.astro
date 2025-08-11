@@ -53,11 +53,9 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
       : <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     )}
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+                
     <style>
-      :root { --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
+                  :root { --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }
       body { font-family: var(--font-sans); }
     </style>
   </head>
@@ -149,6 +147,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
 
     <script>
       (() => {
+        const init = () => {
         const openBtn = document.querySelector('[data-mobile-toggle]');
         const closeBtn = document.querySelector('[data-mobile-close]');
         const drawer = document.getElementById('mobile-drawer');
@@ -223,6 +222,13 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         if (closeBtn) closeBtn.addEventListener('click', close);
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
         drawer.addEventListener('keydown', trap);
+        };
+        if ('requestIdleCallback' in window) {
+          // @ts-ignore
+          window.requestIdleCallback(init);
+        } else {
+          setTimeout(init, 0);
+        }
       })();
     </script>
   </body>

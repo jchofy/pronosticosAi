@@ -1,0 +1,25 @@
+---
+// @ts-nocheck
+// Thin wrapper around Astro's image integration for responsive images
+import { Image } from 'astro:assets';
+const {
+  src, alt = '', widths = [64, 96, 128, 192, 256], sizes = '(max-width: 640px) 96px, 128px', 
+  format = 'webp', class: className = '', loading = 'lazy', decoding = 'async', fetchpriority = 'low', 
+  width, height
+} = Astro.props;
+---
+<Image 
+  src={src}
+  alt={alt}
+  widths={widths}
+  sizes={sizes}
+  format={[format, 'avif']}
+  class={className}
+  loading={loading}
+  decoding={decoding}
+  fetchpriority={fetchpriority}
+  width={width}
+  height={height}
+/>
+
+

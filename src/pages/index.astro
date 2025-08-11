@@ -18,8 +18,8 @@ try {
 
 const siteUrl = SITE_URL;
 const meta = metaBasic(
-  'Pronósticos de fútbol con IA | Próximos partidos (0–72h)',
-  'Analítica y pronósticos de fútbol con IA. Descubre próximos partidos, estadísticas y predicciones en tiempo real para acertar más.',
+  'Pronósticos de fútbol con IA | análisis de valor y cuotas',
+  'Detecta oportunidades con IA: probabilidades ajustadas, precios justos y comparación de cuotas en 1X2, BTTS y over/under.',
   `${siteUrl}/`
 );
 
@@ -60,7 +60,7 @@ const remaining = Math.max(0, (upcoming?.length || 0) - visible.length);
           </div>
         </div>
         <div class="shrink-0 mx-auto md:mx-0">
-          <img src="/logoApp.webp" alt="PronosticosIA" class="h-28 w-28 md:h-36 md:w-36 rounded-2xl" width="144" height="144" loading="lazy" decoding="async" />
+          <img src="/logoApp.webp" alt="PronosticosIA" class="h-28 w-28 md:h-36 md:w-36 rounded-2xl" width="144" height="144" loading="lazy" decoding="async" fetchpriority="low" />
         </div>
       </div>
       <div class="pointer-events-none absolute -right-32 -top-32 h-64 w-64 rounded-full bg-brand-100 opacity-40 blur-3xl"></div>
