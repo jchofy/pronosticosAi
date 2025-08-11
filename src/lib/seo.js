@@ -66,12 +66,8 @@ export const pageMetaForMatch = (match, siteUrl) => {
   const title = `${home} vs ${away}${jornada}: Pronóstico con IA  - ${dateEs}`;
   const dash = '–';
   const teamsStr = `${home}${dash}${away}`;
-  const headBits = [
-    match.matchday ? `J${match.matchday}` : null,
-    dateEs,
-  ].filter(Boolean).join(', ');
-  // Ej.: "Aston Villa–Newcastle (J1, 16 ago 2025): pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo."
-  const description = `${teamsStr} (${headBits}): pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo.`;
+  // Ej.: "Liverpool–Bournemouth Premier League 2025/26: pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo."
+  const description = `${teamsStr} ${league}: pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo.`;
   const canonical = `${siteUrl.replace(/\/$/, '')}/partido/${match.slug}`;
   const jsonLd = eventJsonLd(match);
   const ogImage = `${siteUrl.replace(/\/$/, '')}/og/partido/${match.slug}.png`;
