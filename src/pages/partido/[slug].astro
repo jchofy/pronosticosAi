@@ -25,6 +25,8 @@ try {
 
 const siteUrl = SITE_URL;
 const meta = match ? pageMetaForMatch(match, siteUrl) : { title: 'Partido', description: '', canonical: `${siteUrl}/partido/${slug}` };
+const shareUrl = meta.canonical || `${siteUrl}/partido/${slug}`;
+const shareText = match ? `Pronóstico con IA ${match.home_team_name} vs ${match.away_team_name}` : 'Pronóstico con IA';
 
 const now = new Date();
 const matchDate = match ? new Date(match.date) : new Date();
@@ -86,7 +88,8 @@ const getContrastTextClass = (hex) => {
         <h1 class="text-xl md:text-2xl font-bold leading-snug tracking-tight text-gray-900 not-prose">
           Pronóstico con IA {match.home_team_name} vs {match.away_team_name} – análisis de valor y cuotas {match.matchday ? `(J${match.matchday}, ${fmtDateEsShort(match.date)})` : `(${fmtDateEsShort(match.date)})`}
         </h1>
-        <hr class="my-4  mb-12 "/>
+        <hr class="my-4  mb-6 "/>
+       
         <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 not-prose">
           <div class="flex flex-col items-center gap-2 min-w-0">
             {match.home_logo && <img src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.home_team_name}`} title={match.home_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
@@ -408,6 +411,31 @@ const getContrastTextClass = (hex) => {
       {isPast && (
         <p class="text-xs text-gray-500 mt-4">Partido finalizado o en curso.</p>
       )}
+
+<section class="not-prose mb-8 px-4 pt-4 ">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+            <a class="btn-ghost btn-xs" href={`/liga/${match.league_slug}`}>Clasificación {match.league_name}</a>
+            <a class="btn-ghost btn-xs" href="/proximos">Próximos partidos</a>
+            <div class="ml-auto flex items-center gap-2">
+              <a class="btn-secondary btn-xs" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener">Compartir X</a>
+              <a class="btn-secondary btn-xs" href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`} target="_blank" rel="noopener">WhatsApp</a>
+            </div>
+          </div>
+        </section>
+        <section class="prose prose-sm max-w-none px-4 pt-4">
+          <h2>Probabilidades y fair odds</h2>
+          <p>Analizamos el encuentro con un modelo de valoración de <strong>valor esperado</strong>, ajustando probabilidades implícitas y comparándolas con <em>fair odds</em>. Esto ayuda a identificar cuotas con margen de valor frente al mercado.</p>
+          <h3>Apuesta recomendada y stake</h3>
+          <p>Mostramos primero la apuesta recomendada, su cuota aproximada y una sugerencia de <strong>stake responsable</strong>. Recuerda que las cuotas pueden variar y que el riesgo nunca es cero.</p>
+          <h3>Riesgos y escenarios</h3>
+          <ul>
+            <li>Sesgo por estado de forma y rotaciones de última hora.</li>
+            <li>Variabilidad en <strong>cuotas</strong> según casa y momento.</li>
+            <li>Condiciones de partido: bajas, clima y congestión de calendario.</li>
+          </ul>
+          <h3>Metodología</h3>
+          <p>El modelo combina métricas ofensivas/defensivas recientes, fuerza del rival y <em>bayesian updating</em> para estabilizar las estimaciones. La salida se traduce a probabilidades y <em>fair odds</em> para cada mercado principal.</p>
+        </section>
 
       {bettingHouses && bettingHouses.length > 0 && (
         <section class="not-prose mt-8">
