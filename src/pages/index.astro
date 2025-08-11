@@ -2,7 +2,7 @@
 // @ts-nocheck
 import Base from '../layouts/Base.astro';
 import MatchCard from '../components/MatchCard.astro';
-import { getUpcomingMatches } from '../lib/matches.js';
+import { getUpcomingPredictedMatches } from '../lib/matches.js';
 import { metaBasic } from '../lib/seo.js';
 import { SITE_URL } from '../lib/env.js';
 
@@ -10,7 +10,7 @@ import { SITE_URL } from '../lib/env.js';
 let upcoming = [];
 let error = null;
 try {
-  upcoming = await getUpcomingMatches(72);
+  upcoming = await getUpcomingPredictedMatches();
 } catch (e) {
   error = 'Service unavailable';
   Astro.response.status = 503;
