@@ -89,8 +89,8 @@ export const getMatchBySlug = async (slug) => {
       m.*, l.scrapper_slug AS league_slug, l.name AS league_name, l.country AS league_country,
       l.logo_file AS league_logo,
       ht.name AS home_team_name, ht.logo_file AS home_logo,
-      ht.stadium_name AS stadium, ht.capacity AS stadium_capacity, ht.president AS home_president,
-      at.name AS away_team_name, at.logo_file AS away_logo, at.president AS away_president
+      ht.stadium_name AS stadium, ht.capacity AS stadium_capacity, ht.president AS home_president, ht.coach AS home_coach,
+      at.name AS away_team_name, at.logo_file AS away_logo, at.president AS away_president, at.coach AS away_coach
     FROM matches m
     JOIN teams ht ON m.home_team_id = ht.id
     JOIN teams at ON m.away_team_id = at.id

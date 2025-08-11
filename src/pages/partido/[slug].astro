@@ -4,12 +4,15 @@ import Base from '../../layouts/Base.astro';
 import { getMatchBySlug, getPredictionForMatch } from '../../lib/matches.js';
 import { pageMetaForMatch } from '../../lib/seo.js';
 import { SITE_URL } from '../../lib/env.js';
+import { getActiveBettingHouses } from '../../lib/bettingHouses.js';
 
 const { slug } = Astro.params;
 /** @type {any} */
 let match = null;
 /** @type {{ text?: string|null; generatedAt?: string; bets?: Array<{ bet_type: string; selection: string; odds: number }> } | null} */
 let prediction = null;
+/** @type {Array<{ id:number; name:string; website_url:string; affiliate_code?: string|null; affiliate_url?: string|null; contact_email?: string|null; color:string; logo_file?: string|null; active?: number }>} */
+let bettingHouses = [];
 
 try {
   match = await getMatchBySlug(slug);
@@ -17,6 +20,7 @@ try {
     throw new Response('Not found', { status: 404 });
   }
   prediction = await getPredictionForMatch(match.id);
+  bettingHouses = await getActiveBettingHouses();
 } catch (e) {
   if (e instanceof Response && e.status === 404) throw e;
   Astro.response.status = 503;
@@ -41,6 +45,25 @@ const fmtShort = (s) => {
   } catch { return ''; }
 };
 const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
+const normalizeHexColor = (c) => {
+  try {
+    const s = String(c || '').trim();
+    if (!s) return '#0b5cff';
+    if (s.startsWith('#') && s.length === 7) return s;
+    if (!s.startsWith('#') && s.length === 6) return `#${s}`;
+    return '#0b5cff';
+  } catch {
+    return '#0b5cff';
+  }
+};
+const getContrastTextClass = (hex) => {
+  const h = normalizeHexColor(hex).slice(1);
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
+  const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+  return luminance > 0.6 ? 'text-gray-900' : 'text-white';
+};
 ---
 <Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={meta.jsonLd} og={meta.og} noindex={isOld}>
   {match ? (
@@ -56,7 +79,7 @@ const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
         </a>
       </div>
 
-      <header class="mb-6">
+      <header class="mb-6 ">
         <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 not-prose">
           <div class="flex flex-col items-center gap-2 min-w-0">
             {match.home_logo && <img src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.home_team_name}`} title={match.home_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
@@ -114,20 +137,141 @@ const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
       </section>
 
       <section class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="card p-4">
-          <h3 class="font-semibold mb-2">Equipo local</h3>
-          <p class="text-sm">{match.home_team_name}</p>
-          {match.home_president && <p class="text-xs text-gray-600">Presidente: {match.home_president}</p>}
+        {/* Local team card */}
+        <div class="card card-hover overflow-hidden">
+          <div class="bg-gradient-to-r from-brand-50 to-white px-4 pt-4 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              {match.home_logo && (
+                <img
+                  src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`}
+                  alt={`Escudo ${match.home_team_name}`}
+                  title={match.home_team_name}
+                  class="h-12 w-12 rounded-lg bg-white object-contain p-1 border border-gray-200 shadow-sm"
+                  width="48"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div class="min-w-0">
+                <div class="text-xs uppercase tracking-wide text-gray-500">Local</div>
+                <h3 class="font-bold text-lg text-gray-900 truncate">{match.home_team_name}</h3>
+              </div>
+              <div class="ml-auto flex items-center gap-2">
+                {match.league_logo && (
+                  <img
+                    src={`/${String(match.league_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`}
+                    alt={match.league_name}
+                    class="h-7 w-7 rounded-md bg-white object-contain p-1 border border-gray-200"
+                    width="28"
+                    height="28"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
+                <span class="hidden sm:inline text-xs text-gray-600 truncate max-w-[120px]">{match.league_name}</span>
+              </div>
+            </div>
+          </div>
+          <div class="px-4 py-3">
+            <dl class="space-y-2">
+              {match.home_coach && (
+                <div class="flex items-center gap-2 text-sm">
+                  <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-7 9a7 7 0 0 1 14 0v1H5v-1z"/></svg>
+                  <dt class="text-gray-500">Entrenador</dt>
+                  <dd class="ml-auto font-medium text-gray-900 truncate">{match.home_coach}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
         </div>
-        <div class="card p-4">
-          <h3 class="font-semibold mb-2">Equipo visitante</h3>
-          <p class="text-sm">{match.away_team_name}</p>
-          {match.away_president && <p class="text-xs text-gray-600">Presidente: {match.away_president}</p>}
+
+        {/* Away team card */}
+        <div class="card card-hover overflow-hidden">
+          <div class="bg-gradient-to-r from-white to-brand-50 px-4 pt-4 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+              {match.away_logo && (
+                <img
+                  src={`/${String(match.away_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`}
+                  alt={`Escudo ${match.away_team_name}`}
+                  title={match.away_team_name}
+                  class="h-12 w-12 rounded-lg bg-white object-contain p-1 border border-gray-200 shadow-sm"
+                  width="48"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div class="min-w-0">
+                <div class="text-xs uppercase tracking-wide text-gray-500">Visitante</div>
+                <h3 class="font-bold text-lg text-gray-900 truncate">{match.away_team_name}</h3>
+              </div>
+              <div class="ml-auto flex items-center gap-2">
+                {match.league_logo && (
+                  <img
+                    src={`/${String(match.league_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`}
+                    alt={match.league_name}
+                    class="h-7 w-7 rounded-md bg-white object-contain p-1 border border-gray-200"
+                    width="28"
+                    height="28"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                )}
+                <span class="hidden sm:inline text-xs text-gray-600 truncate max-w-[120px]">{match.league_name}</span>
+              </div>
+            </div>
+          </div>
+          <div class="px-4 py-3">
+            <dl class="space-y-2">
+              {match.away_coach && (
+                <div class="flex items-center gap-2 text-sm">
+                  <svg class="h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm-7 9a7 7 0 0 1 14 0v1H5v-1z"/></svg>
+                  <dt class="text-gray-500">Entrenador</dt>
+                  <dd class="ml-auto font-medium text-gray-900 truncate">{match.away_coach}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
         </div>
       </section>
 
       {isPast && (
         <p class="text-xs text-gray-500 mt-4">Partido finalizado o en curso.</p>
+      )}
+
+      {bettingHouses && bettingHouses.length > 0 && (
+        <section class="not-prose mt-8">
+          <h2 class="text-lg font-bold mb-3">Casas recomendadas para tu depósito y bono</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {bettingHouses.map((bh) => {
+              const color = normalizeHexColor(bh.color);
+              const textClass = getContrastTextClass(color);
+              const bgStyle = { backgroundColor: color };
+              const link = bh.affiliate_url || bh.website_url;
+              return (
+                <a href={link} target="_blank" rel="nofollow noopener" class="block rounded-2xl overflow-hidden border border-gray-200 shadow-sm card-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500" style={bgStyle}>
+                  <div class={`p-4 flex items-center gap-3 ${textClass}`}>
+                    {bh.logo_file && (
+                      <img src={`/${String(bh.logo_file).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Logo ${bh.name}`} width="80" height="80" loading="lazy" decoding="async" class="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
+                    )}
+                    <div class="min-w-0">
+                      <div class="text-sm/5 opacity-90">Casa recomendada</div>
+                      <div class="font-semibold text-base truncate">{bh.name}</div>
+                    </div>
+                    <div class="ml-auto">
+                      <span class={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border ${textClass === 'text-white' ? 'border-white/50' : 'border-black/10'} ${textClass === 'text-white' ? 'text-white' : 'text-gray-900'} bg-black/10`}>Bono</span>
+                    </div>
+                  </div>
+                  <div class={`px-4 pb-4 ${textClass}`}>
+                    <p class="text-xs opacity-90">Deposita y reclama tu recompensa de bienvenida</p>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+          <p class="mt-2 text-[11px] text-gray-500">Enlaces de afiliado. Juega con responsabilidad.</p>
+        </section>
       )}
     </article>
   ) : (
