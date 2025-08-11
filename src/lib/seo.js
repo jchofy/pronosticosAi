@@ -17,6 +17,16 @@ const toDDMMYYYY = (value) => {
   } catch { return '' }
 };
 
+const toEsShortDate = (value) => {
+  try {
+    const d = new Date(value);
+    // e.g., "11 ago 2025"
+    // Ensure lowercase month and remove trailing dot if present
+    const parts = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    return String(parts).replace(/\.$/, '');
+  } catch { return ''; }
+};
+
 export const eventJsonLd = (match) => {
   const name = `${match.home_team_name || match.home_team} vs ${match.away_team_name || match.away_team}`;
   const startDate = toISO(match.date);
@@ -48,12 +58,20 @@ export const metaBasic = (title, description, canonical) => ({ title, descriptio
 
 export const pageMetaForMatch = (match, siteUrl) => {
   const dateStr = toDDMMYYYY(match.date);
+  const dateEs = toEsShortDate(match.date);
   const league = match.league_name;
   const home = match.home_team_name || match.home_team;
   const away = match.away_team_name || match.away_team;
-  const jornada = match.matchday ? `, J${match.matchday}` : '';
-  const title = `${home} vs ${away}: Pronóstico con IA (${league}${jornada}) – ${dateStr}`;
-  const description = `Previa y pronóstico con IA de ${league} (${match.league_country}). Estadio ${match.stadium || 'N/D'}${match.stadium_capacity ? ` (${Number(match.stadium_capacity).toLocaleString('es-ES')} aforo)` : ''}. ${match.matchday ? `Jornada ${match.matchday}. ` : ''}Análisis y apuesta recomendada.`;
+  const jornada = match.matchday ? ` (J${match.matchday})` : '';
+  const title = `${home} vs ${away}${jornada}: Pronóstico con IA  - ${dateEs}`;
+  const dash = '–';
+  const teamsStr = `${home}${dash}${away}`;
+  const headBits = [
+    match.matchday ? `J${match.matchday}` : null,
+    dateEs,
+  ].filter(Boolean).join(', ');
+  // Ej.: "Aston Villa–Newcastle (J1, 16 ago 2025): pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo."
+  const description = `${teamsStr} (${headBits}): pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo.`;
   const canonical = `${siteUrl.replace(/\/$/, '')}/partido/${match.slug}`;
   const jsonLd = eventJsonLd(match);
   const ogImage = `${siteUrl.replace(/\/$/, '')}/og/partido/${match.slug}.png`;

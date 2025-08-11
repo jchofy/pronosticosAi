@@ -42,6 +42,12 @@ const fmtShort = (s) => {
   } catch { return ''; }
 };
 const fmtCap = (n) => (n ? Number(n).toLocaleString('es-ES') : null);
+const fmtDateEsShort = (s) => {
+  try {
+    const d = new Date(s);
+    return String(d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })).replace(/\.$/, '');
+  } catch { return ''; }
+};
 const normalizeHexColor = (c) => {
   try {
     const s = String(c || '').trim();
@@ -77,6 +83,10 @@ const getContrastTextClass = (hex) => {
       </div>
 
       <header class="mb-6 ">
+        <h1 class="text-xl md:text-2xl font-bold leading-snug tracking-tight text-gray-900 not-prose">
+          Pronóstico con IA {match.home_team_name} vs {match.away_team_name} – análisis de valor y cuotas {match.matchday ? `(J${match.matchday}, ${fmtDateEsShort(match.date)})` : `(${fmtDateEsShort(match.date)})`}
+        </h1>
+        <hr class="my-4  mb-12 "/>
         <div class="mb-3 grid grid-cols-[1fr_auto_1fr] items-center gap-3 not-prose">
           <div class="flex flex-col items-center gap-2 min-w-0">
             {match.home_logo && <img src={`/${String(match.home_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Escudo ${match.home_team_name}`} title={match.home_team_name} class="h-12 w-12 team-logo" width="48" height="48" loading="lazy" decoding="async" />}
