@@ -423,8 +423,11 @@ const getContrastTextClass = (hex) => {
           </div>
         </section>
         <section class="prose prose-sm max-w-none px-4 pt-4">
-          <h2>Probabilidades y fair odds</h2>
-          <p>Analizamos el encuentro con un modelo de valoración de <strong>valor esperado</strong>, ajustando probabilidades implícitas y comparándolas con <em>fair odds</em>. Esto ayuda a identificar cuotas con margen de valor frente al mercado.</p>
+          <h2>Pronóstico de fútbol con inteligencia artificial: {match.home_team_name} vs {match.away_team_name}</h2>
+          <p>Pronóstico y previa de {match.league_name}. Evaluamos el {match.home_team_name} vs {match.away_team_name} con un modelo de <strong>valor esperado</strong> y técnicas de <strong>inteligencia artificial</strong> para estimar probabilidades ajustadas.</p>
+
+          <h3>Cuotas y probabilidades (valor esperado)</h3>
+          <p>Analizamos las principales <strong>cuotas</strong> comparándolas con <strong>precios justos</strong> del mercado. Así identificamos valor en mercados como <strong>1X2</strong>, <strong>ambos marcan</strong> y <strong>over/under</strong>.</p>
           <h3>Apuesta recomendada y stake</h3>
           <p>Mostramos primero la apuesta recomendada, su cuota aproximada y una sugerencia de <strong>stake responsable</strong>. Recuerda que las cuotas pueden variar y que el riesgo nunca es cero.</p>
           <h3>Riesgos y escenarios</h3>
@@ -434,12 +437,12 @@ const getContrastTextClass = (hex) => {
             <li>Condiciones de partido: bajas, clima y congestión de calendario.</li>
           </ul>
           <h3>Metodología</h3>
-          <p>El modelo combina métricas ofensivas/defensivas recientes, fuerza del rival y <em>bayesian updating</em> para estabilizar las estimaciones. La salida se traduce a probabilidades y <em>fair odds</em> para cada mercado principal.</p>
+          <p>El modelo combina métricas ofensivas/defensivas recientes, fuerza del rival y <em>bayesian updating</em>. La salida se traduce a <strong>probabilidades</strong> y <strong>precios justos</strong> para los principales mercados.</p>
         </section>
 
       {bettingHouses && bettingHouses.length > 0 && (
         <section class="not-prose mt-8">
-          <h2 class="text-lg font-bold mb-3">Casas recomendadas para tu depósito y bono</h2>
+          <h2 class="text-lg font-bold mb-3">Casas recomendadas para apostar</h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {bettingHouses.map((bh) => {
               const color = normalizeHexColor(bh.color);
@@ -447,21 +450,21 @@ const getContrastTextClass = (hex) => {
               const bgStyle = { backgroundColor: color };
               const link = bh.affiliate_url || bh.website_url;
               return (
-                <a href={link} target="_blank" rel="nofollow noopener" class="block rounded-2xl overflow-hidden border border-gray-200 shadow-sm card-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500" style={bgStyle}>
+                <a href={link} target="_blank" rel="sponsored nofollow noopener" class="block rounded-2xl overflow-hidden border border-gray-200 shadow-sm card-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500" style={bgStyle}>
                   <div class={`p-4 flex items-center gap-3 ${textClass}`}>
                     {bh.logo_file && (
                       <img src={`/${String(bh.logo_file).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={`Logo ${bh.name}`} width="80" height="80" loading="lazy" decoding="async" class="h-16 w-16 sm:h-20 sm:w-20 object-contain" />
                     )}
                     <div class="min-w-0">
-                      <div class="text-sm/5 opacity-90">Casa recomendada</div>
+                      <div class="text-sm/5 opacity-90">Casa de apuestas</div>
                       <div class="font-semibold text-base truncate">{bh.name}</div>
                     </div>
                     <div class="ml-auto">
-                      <span class={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border ${textClass === 'text-white' ? 'border-white/50' : 'border-black/10'} ${textClass === 'text-white' ? 'text-white' : 'text-gray-900'} bg-black/10`}>Bono</span>
+                      <span class={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium border ${textClass === 'text-white' ? 'border-white/50' : 'border-black/10'} ${textClass === 'text-white' ? 'text-white' : 'text-gray-900'} bg-black/10`}>Promoción</span>
                     </div>
                   </div>
                   <div class={`px-4 pb-4 ${textClass}`}>
-                    <p class="text-xs opacity-90">Deposita y reclama tu recompensa de bienvenida</p>
+                    <p class="text-xs opacity-90">Oferta para nuevos usuarios. Consulta términos en la casa.</p>
                   </div>
                 </a>
               );
