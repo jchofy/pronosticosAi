@@ -12,6 +12,31 @@ export const getLeagueBySlug = async (slug) => {
 };
 
 export const getLeagueTable = async (slug) => {
-  // No explicit schema provided for standings; return empty to show placeholder
-  return [];
+  const sql = `
+    SELECT
+      ls.season,
+      ls.position,
+      ls.points,
+      ls.played,
+      ls.wins AS won,
+      ls.draws AS drawn,
+      ls.losses AS lost,
+      ls.goals_for,
+      ls.goals_against,
+      (ls.goals_for - ls.goals_against) AS goal_diff,
+      COALESCE(NULLIF(t.short_name, ''), t.name) AS team_name,
+      t.logo_file AS team_logo,
+      l.scrapper_slug AS league_slug
+    FROM league_standings ls
+    INNER JOIN teams t ON ls.team_id = t.id
+    INNER JOIN leagues l ON l.id = ls.league_id
+    WHERE l.scrapper_slug = ?
+      AND ls.season = (
+        SELECT MAX(ls2.season)
+        FROM league_standings ls2
+        WHERE ls2.league_id = l.id
+      )
+    ORDER BY ls.position ASC
+  `;
+  return query(sql, [slug]);
 }; 

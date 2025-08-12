@@ -28,9 +28,13 @@ const meta = metaBasic(
   league ? `Tabla de posiciones de ${league.name} (${league.country}).` : 'Tabla de posiciones por liga.',
   `${siteUrl}/clasificacion/${slug}`
 );
+const season = Array.isArray(table) && table.length > 0 ? table[0].season : null;
 ---
 <Base { ...meta }>
   <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-6">{league ? `Clasificación – ${league.name}` : 'Clasificación'}</h1>
+  {season && (
+    <div class="text-sm text-gray-600 mb-3">Temporada: {season}</div>
+  )}
 
   { error ? (
     <div class="card p-6 text-red-600">{error}</div>
@@ -47,8 +51,7 @@ const meta = metaBasic(
             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">G</th>
             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">E</th>
             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">P</th>
-            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">GF</th>
-            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">GC</th>
+            <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">DG</th>
             <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pts</th>
           </tr>
         </thead>
@@ -56,13 +59,19 @@ const meta = metaBasic(
           {table.map((r) => (
             <tr>
               <td class="px-3 py-2 text-sm text-gray-700">{r.position}</td>
-              <td class="px-3 py-2 text-sm text-gray-900">{r.team_name}</td>
+              <td class="px-3 py-2 text-sm text-gray-900">
+                <div class="flex items-center gap-2">
+                  {r.team_logo && (
+                    <img src={`/${r.team_logo}`} alt={r.team_name} class="h-5 w-5 rounded-sm object-contain" width="20" height="20" loading="lazy" decoding="async" />
+                  )}
+                  <span class="text-xs">{r.team_name}</span>
+                </div>
+              </td>
               <td class="px-3 py-2 text-sm text-right text-gray-700">{r.played}</td>
               <td class="px-3 py-2 text-sm text-right text-gray-700">{r.won}</td>
               <td class="px-3 py-2 text-sm text-right text-gray-700">{r.drawn}</td>
               <td class="px-3 py-2 text-sm text-right text-gray-700">{r.lost}</td>
-              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.goals_for}</td>
-              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.goals_against}</td>
+              <td class="px-3 py-2 text-sm text-right text-gray-700">{r.goal_diff}</td>
               <td class="px-3 py-2 text-sm text-right font-semibold">{r.points}</td>
             </tr>
           ))}
