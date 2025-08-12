@@ -82,7 +82,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
             <span>Próximos</span>
           </a>
-          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/clasificacion') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/clasificacion') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
             <span>Clasificación</span>
           </a>
@@ -121,7 +121,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
           Próximos
         </a>
-        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion/laliga-ea-sports">
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
           Clasificación
         </a>
@@ -160,7 +160,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         if (!openBtn || !drawer || !overlay) return;
 
         /** @returns {HTMLElement[]} */
-        const getFocusable = () => Array.from(drawer.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])'));
+        const getFocusable = () => Array.from(drawer.querySelectorAll('a, button, [tabindex]:not([tabindex="-1"])')).filter((el) => el instanceof HTMLElement);
 
 
         const setButtonIcons = (isOpen) => {
@@ -173,6 +173,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         };
 
         const open = () => {
+          // @ts-ignore
           lastFocus = (document.activeElement instanceof HTMLElement) ? document.activeElement : null;
           drawer.classList.remove('-translate-x-full');
           overlay.classList.remove('opacity-0', 'pointer-events-none');
@@ -184,7 +185,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           main && main.setAttribute('aria-hidden', 'true');
           footer && footer.setAttribute('aria-hidden', 'true');
           const focusables = /** @type {HTMLElement[]} */ (getFocusable());
-          if (focusables.length) focusables[0].focus();
+          if (focusables.length) (focusables[0]).focus();
         };
         const close = () => {
           drawer.classList.add('-translate-x-full');
@@ -196,15 +197,18 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           document.body.style.overflow = '';
           main && main.removeAttribute('aria-hidden');
           footer && footer.removeAttribute('aria-hidden');
-          try { (lastFocus && typeof lastFocus.focus === 'function') && lastFocus.focus(); } catch (_) {}
+          try {
+            // @ts-ignore
+            if (lastFocus && typeof lastFocus.focus === 'function') { lastFocus.focus(); }
+          } catch (_) {}
         };
 
         const trap = (e) => {
           if (e.key !== 'Tab') return;
           const focusables = /** @type {HTMLElement[]} */ (Array.from(getFocusable()));
           if (!focusables.length) return;
-          const first = focusables[0];
-          const last = focusables[focusables.length - 1];
+          const first = /** @type {HTMLElement} */ (focusables[0]);
+          const last = /** @type {HTMLElement} */ (focusables[focusables.length - 1]);
           if (e.shiftKey && document.activeElement === first) {
             e.preventDefault();
             last.focus();
