@@ -15,7 +15,8 @@ export const getUpcomingMatches = async (hours = 72) => {
     JOIN teams ht ON m.home_team_id = ht.id
     JOIN teams at ON m.away_team_id = at.id
     JOIN leagues l ON m.league_id = l.id
-    WHERE CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid')
+    WHERE m.prediccion = '1'
+      AND CONVERT_TZ(m.date, 'UTC', 'Europe/Madrid')
           BETWEEN CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid')
               AND DATE_ADD(CONVERT_TZ(UTC_TIMESTAMP(), 'UTC', 'Europe/Madrid'), INTERVAL ? HOUR)
     ORDER BY m.date ASC;
