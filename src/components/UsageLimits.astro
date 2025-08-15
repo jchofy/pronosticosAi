@@ -1,0 +1,174 @@
+---
+// @ts-nocheck
+import { getSession } from 'auth-astro/server';
+import { getUserUsageStats, getUserIdFromEmail } from '../lib/subscription-limits.js';
+import { query } from '../lib/db.js';
+
+const session = await getSession(Astro.request);
+let usageStats = null;
+let freeUsageStats = null;
+
+if (session?.user?.email) {
+  const userId = await getUserIdFromEmail(session.user.email);
+  if (userId) {
+    // Intentar obtener estadísticas de suscripción
+    usageStats = await getUserUsageStats(userId);
+    
+    // Si no tiene suscripción, no mostrar estadísticas gratuitas
+    // Los usuarios autenticados sin suscripción deberían suscribirse
+    if (!usageStats) {
+      freeUsageStats = null;
+    }
+  }
+}
+---
+
+{usageStats && (
+  <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0">
+          {usageStats.is_unlimited ? (
+            <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+          ) : (
+            <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+          )}
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-gray-900">
+            Plan: {usageStats.plan_name}
+          </h3>
+          <p class="text-xs text-gray-600">
+            {usageStats.is_unlimited ? (
+              'Acceso ilimitado a pronósticos'
+            ) : (
+              `Hoy: ${usageStats.used_today}/${usageStats.daily_limit} pronósticos`
+            )}
+          </p>
+        </div>
+      </div>
+      
+      {!usageStats.is_unlimited && (
+        <div class="flex-shrink-0">
+          <div class="text-right">
+            <div class="text-lg font-bold text-gray-900">
+              {usageStats.remaining}
+            </div>
+            <div class="text-xs text-gray-500">
+              restantes hoy
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+    
+    {!usageStats.is_unlimited && (
+      <div class="mt-3">
+        <div class="bg-gray-200 rounded-full h-2">
+          <div 
+            class={`h-2 rounded-full transition-all duration-300 ${
+              usageStats.used_today >= usageStats.daily_limit 
+                ? 'bg-red-500' 
+                : usageStats.used_today >= usageStats.daily_limit * 0.8 
+                ? 'bg-yellow-500' 
+                : 'bg-green-500'
+            }`}
+            style={`width: ${Math.min(100, (usageStats.used_today / usageStats.daily_limit) * 100)}%`}
+          >
+          </div>
+        </div>
+        
+        {usageStats.used_today >= usageStats.daily_limit && (
+          <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+            ⚠️ Has alcanzado tu límite diario. El límite se renueva mañana.
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+)}
+
+{freeUsageStats && (
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="flex-shrink-0">
+          <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-blue-900">
+            Plan Gratuito
+          </h3>
+          <p class="text-xs text-blue-700">
+            Hoy: {freeUsageStats.used_today}/{freeUsageStats.daily_limit} pronóstico gratuito
+          </p>
+        </div>
+      </div>
+      
+      <div class="flex-shrink-0">
+        <div class="text-right">
+          <div class="text-lg font-bold text-blue-900">
+            {freeUsageStats.remaining}
+          </div>
+          <div class="text-xs text-blue-600">
+            gratis hoy
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-3">
+      <div class="bg-blue-200 rounded-full h-2">
+        <div 
+          class={`h-2 rounded-full transition-all duration-300 ${
+            freeUsageStats.used_today >= freeUsageStats.daily_limit 
+              ? 'bg-red-500' 
+              : 'bg-blue-500'
+          }`}
+          style={`width: ${Math.min(100, (freeUsageStats.used_today / freeUsageStats.daily_limit) * 100)}%`}
+        >
+        </div>
+      </div>
+      
+      {freeUsageStats.used_today >= freeUsageStats.daily_limit ? (
+        <div class="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+          ℹ️ Has usado tu pronóstico gratuito de hoy. 
+          <a href="/precios" class="text-blue-600 hover:text-blue-800 font-medium">
+            ¡Suscríbete para más!
+          </a>
+        </div>
+      ) : (
+        <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+          💡 ¿Quieres más pronósticos? 
+          <a href="/precios" class="text-blue-600 hover:text-blue-800 font-medium">
+            Ver nuestros planes
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+
+{session?.user && !usageStats && !freeUsageStats && (
+  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center gap-3">
+      <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+      </svg>
+      <div>
+        <h3 class="text-sm font-semibold text-yellow-800">
+          Error cargando estadísticas
+        </h3>
+        <p class="text-xs text-yellow-700">
+          Refresca la página o contacta soporte si persiste
+        </p>
+      </div>
+    </div>
+  </div>
+)}

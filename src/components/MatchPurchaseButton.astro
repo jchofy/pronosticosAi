@@ -1,0 +1,126 @@
+---
+import { getSession } from 'auth-astro/server';
+import { query } from '../lib/db.js';
+
+const { matchId, matchSlug } = Astro.props;
+
+// Verificar sesión
+const session = await getSession(Astro.request);
+const isLoggedIn = !!session?.user;
+
+let hasPurchased = false;
+let hasSubscription = false;
+
+if (isLoggedIn && session?.user?.email) {
+  // Obtener el ID del usuario
+  const users = await query(
+    'SELECT id FROM users WHERE email = ? LIMIT 1',
+    [session.user.email]
+  );
+  
+  if (users.length > 0) {
+    const userId = users[0].id;
+    
+    // Verificar si el usuario ya compró este partido
+    const purchases = await query(
+      'SELECT id FROM payments WHERE user_id = ? AND match_id = ? AND type = "match" AND status = "active" LIMIT 1',
+      [userId, matchId]
+    );
+    hasPurchased = purchases.length > 0;
+
+    // Verificar si tiene una suscripción activa
+    const subscriptions = await query(
+      'SELECT id FROM payments WHERE user_id = ? AND type = "subscription" AND status = "active" AND current_period_end > NOW() LIMIT 1',
+      [userId]
+    );
+    hasSubscription = subscriptions.length > 0;
+  }
+}
+
+// El botón de compra ahora se maneja en PredictionAccessButton
+// Este componente se mantiene para compatibilidad
+const showPurchaseButton = !hasPurchased && !hasSubscription;
+---
+
+{showPurchaseButton && (
+  <>
+    {isLoggedIn ? (
+      <button
+        id="purchaseButton"
+        class="block w-full rounded-lg bg-[#254FB1] px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:ring-offset-gray-900"
+        data-match-id={matchId}
+      >
+        Comprar predicción
+      </button>
+    ) : (
+      <a
+        href={`/login?redirect=/partido/${matchSlug}`}
+        class="block w-full rounded-lg bg-[#254FB1] px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:ring-offset-gray-900"
+      >
+        Iniciar sesión para comprar
+      </a>
+    )}
+  </>
+)}
+
+<script>
+  // Función para manejar la compra
+  async function handlePurchase(matchId) {
+    try {
+      console.log('🛒 Starting purchase for match:', matchId);
+      
+      const response = await fetch('/api/pay/match', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matchId }),
+      });
+
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+
+      const data = await response.json();
+      console.log('📋 Response data:', data);
+      
+      if (data.error) {
+        console.error('❌ Server error:', data.error);
+        console.error('❌ Error details:', data.details);
+        
+        if (data.error === 'already_purchased') {
+          alert('Ya has comprado este partido.');
+        } else {
+          const errorMsg = data.details ? 
+            `Error: ${data.details}` : 
+            'Error al procesar la compra. Por favor, inténtalo de nuevo.';
+          alert(errorMsg);
+        }
+        return;
+      }
+
+      if (data.checkoutUrl) {
+        console.log('✅ Redirecting to checkout:', data.checkoutUrl);
+        window.location.href = data.checkoutUrl;
+      } else {
+        console.error('❌ No checkout URL received');
+        alert('Error: No se pudo obtener la URL de pago.');
+      }
+    } catch (error) {
+      console.error('❌ Client error:', error);
+      alert('Error al conectar con el servidor. Por favor, inténtalo de nuevo.');
+    }
+  }
+
+  // Añadir event listener al botón de compra
+  const purchaseButton = document.getElementById('purchaseButton');
+  if (purchaseButton) {
+    console.log('🎯 Purchase button found, adding event listener');
+    purchaseButton.addEventListener('click', () => {
+      const matchId = purchaseButton.dataset.matchId;
+      console.log('🎬 Button clicked, match ID:', matchId);
+      handlePurchase(matchId);
+    });
+  } else {
+    console.log('❌ Purchase button not found');
+  }
+</script>

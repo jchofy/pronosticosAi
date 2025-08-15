@@ -5,6 +5,9 @@ import { getMatchBySlug } from '../../lib/matches.js';
 import { pageMetaForMatch } from '../../lib/seo.js';
 import { SITE_URL } from '../../lib/env.js';
 import { getActiveBettingHouses } from '../../lib/bettingHouses.js';
+import PredictionAccess from '../../components/PredictionAccess.astro';
+import { getStripeProducts, formatPrice } from '../../lib/stripe-products.js';
+import { STRIPE_PRICE_MATCH, STRIPE_PRICE_SUB_2DAY } from '../../lib/env.js';
 
 const { slug } = Astro.params;
 /** @type {any} */
@@ -12,12 +15,46 @@ let match = null;
 /** @type {Array<{ id:number; name:string; website_url:string; affiliate_code?: string|null; affiliate_url?: string|null; contact_email?: string|null; color:string; logo_file?: string|null; active?: number }>} */
 let bettingHouses = [];
 
+// Obtener productos de Stripe para precios dinámicos
+let matchPrice = '2.49€'; // Fallback
+let subscriptionPrice = 'Desde 9.99€'; // Fallback
+
 try {
   match = await getMatchBySlug(slug);
   if (!match) {
     throw new Response('Not found', { status: 404 });
   }
   bettingHouses = await getActiveBettingHouses();
+  
+  // Obtener precios específicos de Stripe usando los IDs de las variables de entorno
+  try {
+    const { stripe } = await import('../../lib/stripe.js');
+    
+    // Obtener precio del partido individual (STRIPE_PRICE_MATCH)
+    if (STRIPE_PRICE_MATCH) {
+      try {
+        const matchPriceData = await stripe.prices.retrieve(STRIPE_PRICE_MATCH);
+        matchPrice = formatPrice(matchPriceData.unit_amount, matchPriceData.currency);
+      } catch (e) {
+        console.error('Error fetching match price:', e);
+      }
+    }
+    
+    // Obtener precio de suscripción más barata (STRIPE_PRICE_SUB_2DAY)
+    if (STRIPE_PRICE_SUB_2DAY) {
+      try {
+        const subPriceData = await stripe.prices.retrieve(STRIPE_PRICE_SUB_2DAY);
+        subscriptionPrice = `Desde ${formatPrice(subPriceData.unit_amount, subPriceData.currency)}`;
+      } catch (e) {
+        console.error('Error fetching subscription price:', e);
+      }
+    }
+    
+  } catch (stripeError) {
+    console.error('Error loading Stripe prices:', stripeError);
+    // Usar precios por defecto si falla Stripe
+  }
+  
 } catch (e) {
   if (e instanceof Response && e.status === 404) throw e;
   Astro.response.status = 503;
@@ -111,22 +148,111 @@ const getContrastTextClass = (hex) => {
 
       <section class="not-prose card p-6 md:p-7 bg-white/80">
         <h2 class="text-xl md:text-2xl font-extrabold">Pronóstico</h2>
-        <p class="mt-1 text-sm text-gray-700">1 pronóstico gratis al día. Pulsa para revelar la apuesta recomendada y el análisis.</p>
-        <div class="mt-4">
-          <button id="btn-view-prediction" class="btn-primary" data-match-id={match.id} data-home-name={String(match.home_team_name || match.home_team || '')} data-away-name={String(match.away_team_name || match.away_team || '')}>Ver pronóstico</button>
-          <div id="free-hint" class="mt-2 text-xs text-gray-600 hidden">Te queda 1 gratis hoy</div>
-        </div>
-        <div id="prediction-container" class="mt-5 hidden">
-          <div id="prediction-bets" class="hidden"></div>
-          <div class="mt-5 paywall text-sm text-gray-900 whitespace-pre-line" id="prediction-text"></div>
-        </div>
-        <div id="prediction-error" class="mt-3 text-sm text-red-600 hidden" role="alert"></div>
-        <div id="prediction-upsell" class="mt-4 hidden">
-          <div class="rounded-xl border border-gray-200 p-3 bg-gray-50">
-            <p class="text-sm text-gray-700">Este pronóstico es de pago. Puedes comprarlo por separado o suscribirte a un plan.</p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <a id="btn-buy-once" class="btn-primary btn-sm" href="#">Comprar este pronóstico</a>
-              <a class="btn-secondary btn-sm" href="/suscribirme">Ver planes</a>
+        <PredictionAccess matchId={match.id} homeTeamName={match.home_team_name} awayTeamName={match.away_team_name} />
+                  <div id="prediction-upsell" class="mt-8 hidden">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-secondary-600 p-[2px]">
+              <div class="relative rounded-2xl bg-white p-6 dark:bg-gray-900">
+                <div class="absolute inset-0 bg-gradient-to-br from-primary-600/20 to-secondary-600/20 opacity-[0.15]"></div>
+                <div class="relative">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500">
+                        <svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                          Accede a nuestro análisis detallado y predicciones
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-6 grid gap-6 sm:grid-cols-2">
+                    {/* Opción de compra individual */}
+                    <div class="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-primary-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-800">
+                      <div class="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-primary-500/0 via-primary-500/70 to-primary-500/0"></div>
+                      <div class="mb-4">
+                        <div class="flex items-center justify-between">
+                          <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Partido individual</h4>
+                          <span class="rounded-full bg-primary-50 px-3 py-1 text-sm font-medium text-primary-700 dark:bg-primary-900/30 dark:text-primary-400">
+                            {matchPrice}
+                          </span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                          Acceso completo a este partido
+                        </p>
+                      </div>
+                      <ul class="mb-6 space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                        <li class="flex items-center">
+                          <svg class="mr-3 h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                          Análisis detallado
+                        </li>
+                        <li class="flex items-center">
+                          <svg class="mr-3 h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                          Predicción IA
+                        </li>
+                      </ul>
+                      <!-- Purchase button moved to main prediction section -->
+                    </div>
+
+                    {/* Opción de suscripción */}
+                    <div class="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-secondary-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-800">
+                      <div class="absolute inset-x-0 -top-px h-[2px] bg-gradient-to-r from-secondary-500/0 via-secondary-500/70 to-secondary-500/0"></div>
+                      <div class="mb-4">
+                        <div class="flex items-center justify-between">
+                          <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Suscripción</h4>
+                          <span class="rounded-full bg-secondary-50 px-3 py-1 text-sm font-medium text-secondary-700 dark:bg-secondary-900/30 dark:text-secondary-400">
+                            {subscriptionPrice}
+                          </span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                          Acceso a todas las predicciones
+                        </p>
+                      </div>
+                      <ul class="mb-6 space-y-3 text-sm text-gray-600 dark:text-gray-400">
+                        <li class="flex items-center">
+                          <svg class="mr-3 h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                          Análisis detallado
+                        </li>
+                        <li class="flex items-center">
+                          <svg class="mr-3 h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                          Predicción IA
+                        </li>
+                        <li class="flex items-center">
+                          <svg class="mr-3 h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                          </svg>
+                          Desde 2 partidos al día
+                        </li>
+                      </ul>
+                      <div class="mt-2">
+                        <a 
+                          href="/precios" 
+                          class="block w-full rounded-lg bg-[#254FB1] px-4 py-2.5 text-center text-sm font-medium text-white shadow-sm hover:from-primary-600 hover:to-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        >
+                          Ver planes
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+                    <svg class="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    Pago seguro con Stripe
+                  </div>
+                </div>
             </div>
           </div>
         </div>
@@ -200,22 +326,15 @@ const getContrastTextClass = (hex) => {
                   </div>
                 </div>`;
             };
+            // setHint function removed - now handled by UsageLimits component
             const setHint = (n) => {
-              const hint = document.getElementById('free-hint');
-              if (!hint) return;
-              const num = Number(n);
-              if (Number.isFinite(num)) {
-                hint.textContent = `Te queda ${num} gratis hoy`;
-                hint.classList.remove('hidden');
-              }
+              // Legacy function - no longer needed
             };
+            // updateFreeHint function removed - now handled by UsageLimits component
             const updateFreeHint = async () => {
-              try {
-                const st = await fetch('/api/predictions/status', { credentials: 'include' }).then(r => r.json());
-                if (Number(st?.free_remaining) >= 0) setHint(Number(st.free_remaining));
-              } catch {}
+              // Legacy function - no longer needed
             };
-            updateFreeHint();
+            // updateFreeHint() call removed
 
             const renderPrediction = (data) => {
               if (!data) return false;
@@ -251,6 +370,14 @@ const getContrastTextClass = (hex) => {
                 }
               } catch {}
             };
+            
+            // Hacer funciones globales para compatibilidad con PredictionAccess
+            (window as any).renderPrediction = renderPrediction;
+            (window as any).autoOpenPrediction = autoOpen;
+            (window as any).handlePredictionClick = () => {
+              btn && btn.click();
+            };
+            
             if ('requestIdleCallback' in window) {
               // @ts-ignore
               window.requestIdleCallback(autoOpen);
@@ -258,6 +385,8 @@ const getContrastTextClass = (hex) => {
               setTimeout(autoOpen, 0);
             }
 
+            // Event listener removed - now handled by PredictionAccess component
+            /*
             btn.addEventListener('click', async () => {
               setLoading(true);
               err && err.classList.add('hidden');
@@ -277,7 +406,7 @@ const getContrastTextClass = (hex) => {
                   if (err) {
                     if (acc.reason === 'daily_free_limit_reached') {
                       err.textContent = 'Has consumido tu pronóstico gratis de hoy.';
-                      setHint(0);
+                      // setHint(0) removed - handled by UsageLimits component
                     } else {
                       err.textContent = 'No tienes acceso a este pronóstico. Suscríbete o compra este partido para verlo.';
                     }
@@ -311,6 +440,7 @@ const getContrastTextClass = (hex) => {
                 setLoading(false);
               }
             });
+            */
             };
             if ('requestIdleCallback' in window) {
               // @ts-ignore
@@ -318,6 +448,47 @@ const getContrastTextClass = (hex) => {
             } else {
               setTimeout(boot, 0);
             }
+            
+            // Función global para compra de partido individual
+            (window as any).handleMatchPurchase = async function(matchId) {
+              try {
+                console.log('🛒 Starting match purchase for matchId:', matchId);
+                
+                const response = await fetch('/api/pay/match', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ matchId: parseInt(matchId) }),
+                });
+
+                console.log('📡 API response status:', response.status);
+                
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('📄 API response data:', data);
+                
+                if (data.error) {
+                  console.error('❌ API returned error:', data.error);
+                  alert('Error al procesar la compra: ' + data.error);
+                  return;
+                }
+
+                if (data.checkoutUrl) {
+                  console.log('🔄 Redirecting to checkout:', data.checkoutUrl);
+                  window.location.href = data.checkoutUrl;
+                } else {
+                  console.error('❌ No checkoutUrl in response:', data);
+                  alert('Error: No se recibió la URL de pago');
+                }
+              } catch (error) {
+                console.error('💥 Match purchase error:', error);
+                alert('Error al procesar la compra. Por favor, inténtalo de nuevo.');
+              }
+            };
           })();
         </script>
       </section>

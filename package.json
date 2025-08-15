@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@astrojs/tailwind": "^5.1.0",
+    "@auth/core": "^0.37.4",
     "@tailwindcss/typography": "^0.5.10",
     "astro": "^5.0.0",
+    "auth-astro": "^4.2.0",
+    "bcrypt": "^6.0.0",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.5",
-    "mysql2": "^3.11.3"
+    "mysql2": "^3.11.3",
+    "stripe": "^18.4.0"
   },
   "devDependencies": {
     "@astrojs/vercel": "^8.0.7",
@@ -26,4 +30,4 @@
   "engines": {
     "node": ">=18.14.0"
   }
-} 
+}

@@ -1,6 +1,8 @@
 ---
 // @ts-nocheck
 import { SITE_URL } from '../lib/env.js';
+import AuthMenu from '../components/AuthMenu.astro';
+import QuickUsageStatus from '../components/QuickUsageStatus.astro';
 import '../styles/tailwind.css';
 const {
   title = 'Pronósticos y Partidos',
@@ -86,8 +88,18 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
             <span>Clasificación</span>
           </a>
+          <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/precios') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/precios') ? 'page' : undefined} href="/precios">
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l7-3 7 3V8a2 2 0 00-2-2h-3z"/></svg>
+            <span>Precios</span>
+          </a>
         </nav>
-                 <button id="mobile-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" data-mobile-toggle class="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2.5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Abrir menú">
+        
+        <!-- Auth Menu para escritorio -->
+        <div class="hidden md:block">
+          <AuthMenu />
+        </div>
+        
+        <button id="mobile-toggle" type="button" aria-controls="mobile-drawer" aria-expanded="false" data-mobile-toggle class="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2.5 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500" aria-label="Abrir menú">
           <svg data-icon-hamburger xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-6 w-6"><path d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <svg data-icon-close xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="h-6 w-6 hidden"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span class="sr-only">Abrir menú</span>
@@ -121,11 +133,22 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
           Próximos
         </a>
+        <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/precios') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/precios') ? 'page' : undefined} href="/precios">
+          <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l7-3 7 3V8a2 2 0 00-2-2h-3z"/></svg>
+          Precios
+        </a>
         <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
           Clasificación
         </a>
       </nav>
+      
+      <!-- Auth Menu para móvil -->
+      <AuthMenu isMobile={true} />
+      
+      <!-- Quick Usage Status -->
+      <QuickUsageStatus />
+      
       <div class="mt-auto p-3 border-t text-xs text-gray-500">
         © {new Date().getFullYear()} PronosticosIA
       </div>
@@ -235,5 +258,16 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         }
       })();
     </script>
+  <script>
+    // @ts-nocheck
+    // Listener global para actualizar indicadores de uso cuando se consumen créditos
+    window.addEventListener('usageUpdated', function(event) {
+      const detail = event.detail;
+      console.log('📊 Usage updated:', detail);
+      
+      // El evento ya se maneja en PredictionAccess.astro, pero podemos agregar más lógica aquí si es necesario
+      // Por ejemplo, actualizar otros elementos de la UI, mostrar notificaciones, etc.
+    });
+  </script>
   </body>
 </html> 

@@ -1,0 +1,496 @@
+---
+// @ts-nocheck
+import { getSession } from 'auth-astro/server';
+import { query } from '../lib/db.js';
+import { getUserUsageStats, getUserIdFromEmail } from '../lib/subscription-limits.js';
+
+const { matchId, homeTeamName, awayTeamName } = Astro.props;
+
+const session = await getSession(Astro.request);
+const isLoggedIn = !!session?.user?.email;
+
+// Estado del acceso
+let accessState = {
+  hasAccess: false,
+  canUseFree: false,
+  hasSubscription: false,
+  subscriptionLimitReached: false,
+  usageStats: null,
+  userType: 'anonymous', // 'anonymous', 'logged_no_sub', 'logged_with_sub'
+  message: '',
+  hint: ''
+};
+
+if (isLoggedIn) {
+  const userId = await getUserIdFromEmail(session.user.email);
+  
+  if (userId) {
+    // Verificar si ya compró este partido específico
+    const purchase = await query(
+      'SELECT id FROM payments WHERE user_id = ? AND match_id = ? AND type = "match" AND status = "active" LIMIT 1',
+      [userId, matchId]
+    );
+    
+    if (purchase.length > 0) {
+      accessState.hasAccess = true;
+    } else {
+      // Obtener estadísticas de uso
+      accessState.usageStats = await getUserUsageStats(userId);
+      accessState.hasSubscription = !!accessState.usageStats;
+      
+      // Usage stats loaded
+      
+      if (accessState.hasSubscription) {
+        accessState.userType = 'logged_with_sub';
+        // Verificar si alcanzó el límite de suscripción
+        if (!accessState.usageStats.is_unlimited && 
+            accessState.usageStats.remaining <= 0) {
+          accessState.subscriptionLimitReached = true;
+          accessState.message = `Has alcanzado tu límite diario de ${accessState.usageStats.daily_limit} pronósticos. Compra este partido individual para acceder.`;
+        } else {
+          accessState.message = `Plan ${accessState.usageStats.plan_name} activo. Pulsa para revelar la apuesta recomendada y el análisis.`;
+          if (!accessState.usageStats.is_unlimited) {
+            accessState.hint = `Te quedan ${accessState.usageStats.remaining} hoy`;
+          }
+        }
+      } else {
+        accessState.userType = 'logged_no_sub';
+        accessState.canUseFree = true;
+        accessState.message = "Tienes 1 pronóstico gratuito al día. Pulsa para revelar la apuesta recomendada y el análisis.";
+        accessState.hint = "Te queda 1 gratis hoy";
+      }
+    }
+  }
+} else {
+  accessState.userType = 'anonymous';
+  accessState.canUseFree = true;
+  accessState.message = "1 pronóstico gratis al día. Pulsa para revelar la apuesta recomendada y el análisis.";
+  accessState.hint = "Te queda 1 gratis hoy";
+}
+---
+
+{accessState.hasAccess ? (
+  <!-- Ya tiene acceso, el JS se encargará de mostrar el contenido -->
+  <div class="mt-4">
+    <button id="btn-view-prediction" class="btn-primary" data-match-id={matchId} data-home-name={homeTeamName} data-away-name={awayTeamName}>
+      Ver pronóstico
+    </button>
+    <!-- Free hint removed - now handled by PredictionAccessButton -->
+  </div>
+) : (
+  <!-- Necesita desbloquear -->
+  <div class="mt-4">
+    <p class="mt-1 text-sm text-gray-700">{accessState.message}</p>
+    
+    {/* Usage indicator will appear below for subscription users */}
+    
+    {/* Indicador de uso diario - solo para usuarios con suscripción activa */}
+    {accessState.hasSubscription && !accessState.usageStats.is_unlimited && (
+      <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg" data-usage-indicator="page">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-blue-900">Plan: {accessState.usageStats.plan_name}</span>
+          </div>
+          <div class="text-sm text-blue-700" data-usage-text>
+            Hoy: {accessState.usageStats.used_today}/{accessState.usageStats.daily_limit} pronósticos
+          </div>
+        </div>
+        
+        {/* Barra de progreso */}
+        <div class="mt-2">
+          <div class="bg-blue-200 rounded-full h-2">
+            <div 
+              class={`h-2 rounded-full transition-all duration-300 ${
+                accessState.usageStats.used_today >= accessState.usageStats.daily_limit 
+                  ? 'bg-red-500' 
+                  : accessState.usageStats.used_today >= accessState.usageStats.daily_limit * 0.8 
+                  ? 'bg-yellow-500' 
+                  : 'bg-blue-500'
+              }`}
+              style={`width: ${Math.min(100, (accessState.usageStats.used_today / accessState.usageStats.daily_limit) * 100)}%`}
+              data-progress-bar
+            >
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    
+    {/* Indicador especial para plan ilimitado */}
+    {accessState.hasSubscription && accessState.usageStats.is_unlimited && (
+      <div class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            <span class="text-sm font-medium text-green-900">Plan: {accessState.usageStats.plan_name}</span>
+          </div>
+          <div class="text-sm text-green-700 font-medium">
+            ∞ Acceso ilimitado
+          </div>
+        </div>
+      </div>
+    )}
+    
+    <div class="mt-4">
+      {/* Botón principal - mantiene el estilo original */}
+      {(accessState.canUseFree && !accessState.hasSubscription) || (accessState.hasSubscription && !accessState.subscriptionLimitReached) ? (
+        <button 
+          id="btn-view-prediction" 
+          class="btn-primary" 
+          data-match-id={matchId}
+          data-home-name={homeTeamName}
+          data-away-name={awayTeamName}
+          data-access-type={accessState.hasSubscription ? 'subscription' : 'free'}
+        >
+          Ver pronóstico
+        </button>
+      ) : (
+        <!-- No tiene acceso directo -->
+        <div class="space-y-3">
+          <button 
+            id="btn-buy-match" 
+            class="btn-primary w-full" 
+            data-match-id={matchId}
+          >
+            Comprar este partido (€2.59)
+          </button>
+          
+          {!accessState.hasSubscription && (
+            <a 
+              href="/precios" 
+              class="btn-secondary w-full inline-block text-center"
+            >
+              Ver planes de suscripción
+            </a>
+          )}
+        </div>
+      )}
+      
+      {/* Hint removed - now handled by individual access button components */}
+    </div>
+    
+    <!-- Error container para compatibilidad con JS existente -->
+    <div id="prediction-error" class="mt-3 text-sm text-red-600 hidden"></div>
+    
+    <!-- Upsell container para compatibilidad con JS existente -->
+    <div id="prediction-upsell" class="mt-4 hidden">
+      <div class="border border-orange-200 bg-orange-50 rounded-lg p-4">
+        <p class="text-sm text-orange-800 mb-3">Accede a todos los pronósticos con una suscripción</p>
+        <a href="/precios" class="btn-secondary text-sm">Ver planes</a>
+      </div>
+    </div>
+  </div>
+)}
+
+<!-- Contenedor de predicción - mantiene estructura original -->
+<div id="prediction-container" class="mt-5 hidden">
+  <div id="prediction-bets" class="hidden"></div>
+  <div class="mt-5 paywall text-sm text-gray-900 whitespace-pre-line" id="prediction-text"></div>
+</div>
+
+<script define:vars={{ hasAccess: accessState.hasAccess, matchId, hasSubscription: accessState.hasSubscription, isLoggedIn }}>
+  // Mantener compatibilidad con el JavaScript existente
+  if (hasAccess) {
+    // Si ya tiene acceso, cargar automáticamente
+    setTimeout(() => {
+      if (window.autoOpenPrediction) {
+        window.autoOpenPrediction();
+      }
+    }, 100);
+  }
+
+  // Manejar clicks del botón principal
+  document.addEventListener('click', function(e) {
+    if (e.target.id === 'btn-view-prediction') {
+      const accessType = e.target.dataset.accessType;
+      
+      if (hasAccess) {
+        // Ya tiene acceso, llamar función original
+        if (window.handlePredictionClick) {
+          window.handlePredictionClick();
+        }
+      } else {
+        // Necesita desbloquear a través de la API
+        handleUnlock(matchId, accessType);
+      }
+    } else if (e.target.id === 'btn-buy-match') {
+      const matchId = e.target.dataset.matchId;
+      if (window.handleMatchPurchase) {
+        window.handleMatchPurchase(matchId);
+      }
+    }
+  });
+
+  async function handleUnlock(matchId, accessType) {
+    try {
+      // Ocultar mensajes de error previos
+      const errorEl = document.getElementById('prediction-error');
+      if (errorEl) {
+        errorEl.classList.add('hidden');
+      }
+      
+      // Mostrar loading
+      const btn = document.getElementById('btn-view-prediction');
+      const originalText = btn.textContent;
+      btn.textContent = 'Cargando...';
+      btn.disabled = true;
+
+      const response = await fetch('/api/predictions/access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matchId: parseInt(matchId) }),
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'granted') {
+        // Actualizar indicadores de uso dinámicamente
+        updateUsageIndicators(data);
+        
+        // Ocultar botón y mostrar contenido
+        btn.style.display = 'none';
+        
+        // Hint management removed - now handled by UsageLimits component
+        
+        // Cargar y mostrar la predicción
+        const predResp = await fetch(`/api/predictions/${matchId}`);
+        if (predResp.ok) {
+          const predData = await predResp.json();
+          
+          // Usar la función de render existente si está disponible
+          if (window.renderPrediction) {
+            window.renderPrediction(predData);
+          } else {
+            // Fallback simple
+            const container = document.getElementById('prediction-container');
+            const textEl = document.getElementById('prediction-text');
+            if (container && textEl) {
+              textEl.textContent = predData.text || 'Pronóstico cargado';
+              container.classList.remove('hidden');
+            }
+          }
+        }
+        
+      } else if (data.status === 'limit_exceeded') {
+        // Manejar límite alcanzado
+        showLimitReachedMessage(data);
+        
+        // Restaurar botón
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+      } else if (data.status === 'payment_required') {
+        // Manejar cuando se requiere pago (límite gratuito alcanzado)
+        showPaymentRequiredMessage(data);
+        
+        // Restaurar botón
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+      } else {
+        // Error genérico
+        showGenericError();
+        btn.textContent = originalText;
+        btn.disabled = false;
+      }
+      
+    } catch (error) {
+      console.error('Error unlocking prediction:', error);
+      showGenericError();
+      
+      // Restaurar botón
+      const btn = document.getElementById('btn-view-prediction');
+      if (btn) {
+        btn.textContent = 'Ver pronóstico';
+        btn.disabled = false;
+      }
+    }
+  }
+
+  // Función para actualizar los indicadores de uso dinámicamente
+  function updateUsageIndicators(responseData) {
+    // 1. Actualizar indicador en la página actual (si existe)
+    const pageIndicator = document.querySelector('[data-usage-indicator="page"]');
+    if (pageIndicator && responseData.access_type === 'subscription') {
+      updatePageIndicator(pageIndicator, responseData);
+    }
+
+    // 2. Actualizar indicador del menú móvil
+    const mobileIndicator = document.querySelector('[data-usage-indicator="mobile"]');
+    if (mobileIndicator && responseData.access_type === 'subscription') {
+      updateMobileIndicator(mobileIndicator, responseData);
+    }
+
+    // 3. Emitir evento personalizado para otros componentes
+    window.dispatchEvent(new CustomEvent('usageUpdated', {
+      detail: {
+        accessType: responseData.access_type,
+        used: responseData.used,
+        limit: responseData.limit,
+        remaining: responseData.remaining,
+        plan: responseData.plan
+      }
+    }));
+  }
+
+  function updatePageIndicator(indicator, data) {
+    // Actualizar texto "Hoy: X/Y pronósticos"
+    const usageText = indicator.querySelector('[data-usage-text]');
+    if (usageText) {
+      usageText.textContent = `Hoy: ${data.used}/${data.limit} pronósticos`;
+    }
+
+    // Actualizar barra de progreso
+    const progressBar = indicator.querySelector('[data-progress-bar]');
+    if (progressBar && data.limit) {
+      const percentage = Math.min(100, (data.used / data.limit) * 100);
+      progressBar.style.width = `${percentage}%`;
+      
+      // Actualizar color de la barra
+      progressBar.className = progressBar.className.replace(/bg-(red|yellow|blue)-500/, '');
+      if (data.used >= data.limit) {
+        progressBar.classList.add('bg-red-500');
+      } else if (data.used >= data.limit * 0.8) {
+        progressBar.classList.add('bg-yellow-500');
+      } else {
+        progressBar.classList.add('bg-blue-500');
+      }
+    }
+  }
+
+  function updateMobileIndicator(indicator, data) {
+    // Actualizar texto en menú móvil
+    const usageText = indicator.querySelector('[data-mobile-usage]');
+    if (usageText) {
+      usageText.textContent = `${data.remaining} de tu plan`;
+      
+      // Actualizar color
+      usageText.className = usageText.className.replace(/text-(red|yellow|green)-600/, '');
+      if (data.remaining === 0) {
+        usageText.classList.add('text-red-600');
+      } else if (data.remaining <= 1) {
+        usageText.classList.add('text-yellow-600');
+      } else {
+        usageText.classList.add('text-green-600');
+      }
+    }
+  }
+
+  // Funciones para manejar diferentes tipos de errores y mensajes
+  function showLimitReachedMessage(data) {
+    const errorEl = document.getElementById('prediction-error');
+    if (errorEl) {
+      errorEl.innerHTML = `
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-sm font-medium text-red-800 mb-1">
+                Límite de suscripción alcanzado
+              </h3>
+              <p class="text-sm text-red-700 mb-3">
+                ${data.reason || 'Has usado todos los pronósticos de tu plan para hoy.'}
+              </p>
+              <a href="/precios" class="inline-flex items-center px-3 py-2 border border-red-300 shadow-sm text-sm leading-4 font-medium rounded-md text-red-700 bg-white hover:bg-red-50 transition-colors">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+                Mejorar Plan
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  function showPaymentRequiredMessage(data) {
+    const errorEl = document.getElementById('prediction-error');
+    if (errorEl) {
+      // Determinar si el usuario está registrado
+      const userIsLoggedIn = isLoggedIn;
+      
+      errorEl.innerHTML = `
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-sm font-medium text-blue-800 mb-1">
+                Ya has usado tu pronóstico gratuito de hoy
+              </h3>
+              <p class="text-sm text-blue-700 mb-3">
+                ${userIsLoggedIn 
+                  ? '¡Mañana tendrás otro pronóstico gratuito disponible! O puedes suscribirte para obtener más.'
+                  : '¡Mañana tendrás otro pronóstico gratuito disponible! Regístrate para acceder a más opciones.'
+                }
+              </p>
+              <div class="flex gap-2">
+                <a href="/precios" class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Ver Planes
+                </a>
+                ${userIsLoggedIn ? `
+                  <button onclick="handleMatchPurchase && handleMatchPurchase(${matchId})" class="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+                    </svg>
+                    Comprar Solo Este (€2.59)
+                  </button>
+                ` : `
+                  <a href="/login" class="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 transition-colors">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                    </svg>
+                    Iniciar Sesión
+                  </a>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      errorEl.classList.remove('hidden');
+    }
+  }
+
+  function showGenericError() {
+    const errorEl = document.getElementById('prediction-error');
+    if (errorEl) {
+      errorEl.innerHTML = `
+        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-sm font-medium text-gray-800 mb-1">
+                No se pudo desbloquear el pronóstico
+              </h3>
+              <p class="text-sm text-gray-600 mb-3">
+                Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo en unos momentos.
+              </p>
+              <button onclick="location.reload()" class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Reintentar
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      errorEl.classList.remove('hidden');
+    }
+  }
+</script>

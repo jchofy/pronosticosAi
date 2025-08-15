@@ -1,0 +1,59 @@
+---
+// @ts-nocheck
+import { getSession } from 'auth-astro/server';
+import { getUserUsageStats, getUserIdFromEmail } from '../lib/subscription-limits.js';
+import { query } from '../lib/db.js';
+
+const session = await getSession(Astro.request);
+let usageStats = null;
+let freeUsageStats = null;
+
+if (session?.user?.email) {
+  const userId = await getUserIdFromEmail(session.user.email);
+  if (userId) {
+    // Intentar obtener estadísticas de suscripción
+    usageStats = await getUserUsageStats(userId);
+    
+    // Usage stats loaded
+    
+    // Si no tiene suscripción, obtener estadísticas de uso gratuito
+    // Para usuarios autenticados sin suscripción, no mostramos estadísticas gratuitas
+    // ya que deberían suscribirse o comprar partidos individuales
+    if (!usageStats) {
+      // No mostrar estadísticas para usuarios sin suscripción
+      freeUsageStats = null;
+    }
+  }
+}
+---
+
+{usageStats && (
+  <div class="px-3 py-2 border-t border-gray-100" data-usage-indicator="mobile">
+    <div class="flex items-center justify-between text-xs">
+      <span class="text-gray-600">Plan: {usageStats.plan_name}</span>
+      {usageStats.is_unlimited ? (
+        <span class="text-green-600 font-medium">∞ Ilimitado</span>
+      ) : (
+        <span class={`font-medium ${
+          usageStats.remaining === 0 ? 'text-red-600' : 
+          usageStats.remaining <= 1 ? 'text-yellow-600' : 'text-green-600'
+        }`} data-mobile-usage>
+          {usageStats.remaining} de tu plan
+        </span>
+      )}
+    </div>
+  </div>
+)}
+
+{freeUsageStats && (
+  <div class="px-3 py-2 border-t border-gray-100">
+    <div class="flex items-center justify-between text-xs">
+      <span class="text-gray-600">Plan Gratuito</span>
+      <span class={`font-medium ${
+        freeUsageStats.remaining === 0 ? 'text-red-600' : 'text-blue-600'
+      }`}>
+        {freeUsageStats.remaining} gratis hoy
+      </span>
+    </div>
+  </div>
+)}

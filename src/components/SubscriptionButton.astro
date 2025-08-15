@@ -1,0 +1,75 @@
+---
+// @ts-nocheck
+import { getSession } from 'auth-astro/server';
+import { query } from '../lib/db.js';
+
+const { planType, priceId, productName, price, interval, isPopular = false } = Astro.props;
+
+const session = await getSession(Astro.request);
+const isLoggedIn = !!session?.user;
+
+// Verificar si el usuario ya tiene una suscripción activa
+let hasActiveSubscription = false;
+if (isLoggedIn && session?.user?.email) {
+  const users = await query(
+    'SELECT id FROM users WHERE email = ? LIMIT 1',
+    [session.user.email]
+  );
+
+  if (users.length > 0) {
+    const userId = users[0].id;
+    
+    const subscriptions = await query(`
+      SELECT id
+      FROM payments 
+      WHERE user_id = ? 
+        AND type = 'subscription'
+        AND status = 'active'
+        AND current_period_end > NOW()
+      LIMIT 1
+    `, [userId]);
+
+    hasActiveSubscription = subscriptions.length > 0;
+  }
+}
+---
+
+{hasActiveSubscription ? (
+  <button 
+    disabled
+    class="w-full py-3 px-4 rounded-lg bg-gray-100 text-gray-500 font-medium cursor-not-allowed"
+  >
+    Ya tienes una suscripción activa
+  </button>
+) : (
+  <button 
+    class={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-300 subscribe-btn ${
+      isPopular 
+        ? 'bg-brand-600 text-white hover:bg-brand-700 shadow-md hover:shadow-lg' 
+        : 'bg-white text-brand-600 border-2 border-brand-600 hover:bg-brand-50'
+    }`}
+    data-plan={planType}
+    data-price-id={priceId}
+  >
+    {isLoggedIn ? 'Suscribirse ahora' : 'Iniciar sesión para suscribirse'}
+  </button>
+)}
+
+<script>
+  // Este script se ejecutará después de que el script principal de la página se cargue
+  document.addEventListener('DOMContentLoaded', function() {
+    const subscribeButtons = document.querySelectorAll('.subscribe-btn');
+    
+    subscribeButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        const plan = e.target.dataset.plan;
+        const priceId = e.target.dataset.priceId;
+        
+        // Llamar a la función global definida en la página principal
+        if (window.handleSubscribe) {
+          window.handleSubscribe(plan, priceId);
+        }
+      });
+    });
+  });
+</script>

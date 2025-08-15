@@ -1,8 +1,10 @@
 import { getOrCreateSubject, getClientIp, getUserAgent, hashIpUa } from '../../../lib/subject.js';
-import { findActiveSubscription, hasMatchPurchase } from '../../../lib/access.js';
+import { findActiveSubscription, hasMatchPurchase, getUserIdFromEmail } from '../../../lib/access.js';
+import { canUserAccessPrediction } from '../../../lib/subscription-limits.js';
 import { query } from '../../../lib/db.js';
 import { isGooglebot } from '../../../lib/bot.js';
 import { getPredictionForMatch } from '../../../lib/matches.js';
+import { getSession } from 'auth-astro/server';
 
 export async function GET({ request, params, cookies }) {
   try {
@@ -15,6 +17,10 @@ export async function GET({ request, params, cookies }) {
       const data = await getPredictionForMatch(matchId);
       return new Response(JSON.stringify(data || { text: null }), { status: 200, headers: { 'Cache-Control': 'private, max-age=60' } });
     }
+
+    // Check if user is authenticated
+    const session = await getSession(request);
+    const userId = session?.user?.email ? await getUserIdFromEmail(session.user.email) : null;
 
     const AstroLike = { request, cookies };
     const { subjectId } = await getOrCreateSubject(AstroLike);
@@ -48,18 +54,14 @@ export async function GET({ request, params, cookies }) {
       }
     } catch {}
 
-    // Has subscription (quota might have been consumed in /access)
-    const sub = await findActiveSubscription(subjectId);
-    if (sub) {
+    // Check authenticated user match purchase (individual purchase)
+    if (userId && await hasMatchPurchase(userId, matchId)) {
       const data = await getPredictionForMatch(matchId);
       return new Response(JSON.stringify(data || { text: null }), { status: 200, headers: { 'Cache-Control': 'private, max-age=60' } });
     }
-
-    // One-off purchase
-    if (await hasMatchPurchase(subjectId, matchId)) {
-      const data = await getPredictionForMatch(matchId);
-      return new Response(JSON.stringify(data || { text: null }), { status: 200, headers: { 'Cache-Control': 'private, max-age=60' } });
-    }
+    
+    // Note: For subscription access, users must go through /api/predictions/access first
+    // This prevents direct access and ensures proper limit tracking
 
     // Do NOT allow daily free directly from GET; only via /access which logs the grant for this match
 

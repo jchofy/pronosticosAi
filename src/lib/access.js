@@ -1,20 +1,33 @@
 import { query } from './db.js';
 
-export const findActiveSubscription = async (subjectId) => {
+export const findActiveSubscription = async (userId) => {
+  if (!userId) return null;
+  
   const rows = await query(`
-    SELECT s.id AS subscription_id, s.status, s.current_period_end,
-           p.id AS plan_id, p.code, p.interval, p.quota_per_day
-    FROM subscriptions s
-    JOIN plans p ON s.plan_id = p.id
-    WHERE s.subject_id = ? AND s.status = 'active' AND (s.current_period_end IS NULL OR s.current_period_end > NOW())
-    ORDER BY s.current_period_end DESC
+    SELECT id, status, current_period_end
+    FROM payments 
+    WHERE user_id = ? 
+      AND type = 'subscription' 
+      AND status = 'active' 
+      AND (current_period_end IS NULL OR current_period_end > NOW())
+    ORDER BY current_period_end DESC
     LIMIT 1
-  `, [subjectId]);
+  `, [userId]);
   return rows[0] || null;
 };
 
-export const hasMatchPurchase = async (subjectId, matchId) => {
-  const rows = await query(`SELECT id FROM purchases WHERE subject_id = ? AND match_id = ? AND status = 'paid' LIMIT 1`, [subjectId, matchId]);
+export const hasMatchPurchase = async (userId, matchId) => {
+  if (!userId || !matchId) return false;
+  
+  const rows = await query(`
+    SELECT id 
+    FROM payments 
+    WHERE user_id = ? 
+      AND match_id = ? 
+      AND type = 'match' 
+      AND status = 'active' 
+    LIMIT 1
+  `, [userId, matchId]);
   return rows.length > 0;
 };
 
@@ -38,6 +51,13 @@ export const consumeDailyFree = async (subjectId, matchId, ipHash, uaHash, dateU
 
 export const consumeSubscriptionDailyQuota = async (subscriptionId, subjectId, dateUTC) => {
   await query(`INSERT INTO subscription_daily_uses (subscription_id, subject_id, date_utc, used_count) VALUES (?, ?, ?, 1) ON DUPLICATE KEY UPDATE used_count = used_count + 1`, [subscriptionId, subjectId, dateUTC]);
+};
+
+// Nueva función para obtener userId desde email
+export const getUserIdFromEmail = async (email) => {
+  if (!email) return null;
+  const users = await query('SELECT id FROM users WHERE email = ? LIMIT 1', [email]);
+  return users.length > 0 ? users[0].id : null;
 };
 
 

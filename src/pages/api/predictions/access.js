@@ -1,5 +1,7 @@
 import { getOrCreateSubject, getClientIp, getUserAgent, hashIpUa } from '../../../lib/subject.js';
-import { findActiveSubscription, hasMatchPurchase, canUseDailyFree, consumeDailyFree, consumeSubscriptionDailyQuota } from '../../../lib/access.js';
+import { findActiveSubscription, hasMatchPurchase, canUseDailyFree, consumeDailyFree, consumeSubscriptionDailyQuota, getUserIdFromEmail } from '../../../lib/access.js';
+import { canUserAccessPrediction, recordPredictionAccess } from '../../../lib/subscription-limits.js';
+import { getSession } from 'auth-astro/server';
 import { query } from '../../../lib/db.js';
 
 export async function POST({ request, cookies }) {
@@ -9,6 +11,10 @@ export async function POST({ request, cookies }) {
     if (!Number.isFinite(matchId)) {
       return new Response(JSON.stringify({ error: 'bad_request' }), { status: 400 });
     }
+
+    // Check if user is authenticated
+    const session = await getSession(request);
+    const userId = session?.user?.email ? await getUserIdFromEmail(session.user.email) : null;
 
     const AstroLike = { request, cookies };
     const { subjectId } = await getOrCreateSubject(AstroLike);
@@ -33,43 +39,79 @@ export async function POST({ request, cookies }) {
       return new Response(JSON.stringify({ status: 'granted' }), { status: 200 });
     }
 
-    const sub = await findActiveSubscription(subjectId);
-    if (sub) {
-      const isUnlimited = sub.quota_per_day == null;
-      if (isUnlimited) {
+    // 1) Check authenticated user subscription FIRST
+    if (userId) {
+      console.log('🔍 Checking subscription access for userId:', userId);
+      const accessCheck = await canUserAccessPrediction(userId);
+      
+      if (accessCheck.allowed) {
+        console.log('🔍 Access allowed, recording usage for userId:', userId);
+        // Registrar el acceso y actualizar contador
+        const recorded = await recordPredictionAccess(userId);
+        
+        if (recorded && validMatchId != null) {
+          await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
+        }
+        
+        return new Response(JSON.stringify({ 
+          status: 'granted',
+          access_type: 'subscription',
+          plan: accessCheck.plan_name,
+          used: accessCheck.used + 1,
+          limit: accessCheck.limit,
+          remaining: accessCheck.limit ? Math.max(0, accessCheck.limit - (accessCheck.used + 1)) : null,
+          message: accessCheck.limit ? 
+            `Pronóstico desbloqueado. Te quedan ${Math.max(0, accessCheck.limit - (accessCheck.used + 1))} hoy.` :
+            'Pronóstico desbloqueado con tu plan ilimitado.'
+        }), { status: 200 });
+      } else if (accessCheck.reason === 'daily_limit_exceeded') {
+        return new Response(JSON.stringify({ 
+          status: 'limit_exceeded',
+          reason: 'Has alcanzado tu límite diario de pronósticos',
+          used: accessCheck.used,
+          limit: accessCheck.limit,
+          plan: accessCheck.plan_name,
+          access_type: 'subscription_limit_exceeded'
+        }), { status: 403 });
+      } else if (accessCheck.reason === 'no_subscription') {
+        // Usuario autenticado pero sin suscripción - puede usar gratuito
+        if (await canUseDailyFree(subjectId, ipHash, uaHash, today)) {
+          await consumeDailyFree(subjectId, validMatchId, ipHash, uaHash, today);
+          if (validMatchId != null) {
+            await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
+          }
+          return new Response(JSON.stringify({ 
+            status: 'granted',
+            access_type: 'daily_free',
+            message: 'Pronóstico gratuito desbloqueado. Mañana tendrás otro disponible.'
+          }), { status: 200 });
+        }
+      }
+    } else {
+      // 2) Usuario NO autenticado - puede usar gratuito
+      if (await canUseDailyFree(subjectId, ipHash, uaHash, today)) {
+        await consumeDailyFree(subjectId, validMatchId, ipHash, uaHash, today);
         if (validMatchId != null) {
           await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
         }
-        return new Response(JSON.stringify({ status: 'granted' }), { status: 200 });
+        return new Response(JSON.stringify({ 
+          status: 'granted',
+          access_type: 'daily_free',
+          message: 'Pronóstico gratuito desbloqueado. Mañana tendrás otro disponible.'
+        }), { status: 200 });
       }
-      // check used today
-      const used = await query('SELECT used_count FROM subscription_daily_uses WHERE subscription_id = ? AND date_utc = ? LIMIT 1', [sub.subscription_id, today]);
-      const usedCount = used?.[0]?.used_count ? Number(used[0].used_count) : 0;
-      if (usedCount < Number(sub.quota_per_day)) {
-        await consumeSubscriptionDailyQuota(sub.subscription_id, subjectId, today);
-        if (validMatchId != null) {
-          await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
-        }
-        return new Response(JSON.stringify({ status: 'granted' }), { status: 200 });
-      }
-      // quota exceeded
     }
 
-    // 2) One-off purchase
-    if (await hasMatchPurchase(subjectId, matchId)) {
+    // 3) Check authenticated user match purchase (individual purchase)
+    if (userId && await hasMatchPurchase(userId, matchId)) {
       if (validMatchId != null) {
         await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
       }
-      return new Response(JSON.stringify({ status: 'granted' }), { status: 200 });
-    }
-
-    // 3) Daily free: allow once per day per subject and IP/UA
-    if (await canUseDailyFree(subjectId, ipHash, uaHash, today)) {
-      await consumeDailyFree(subjectId, validMatchId, ipHash, uaHash, today);
-      if (validMatchId != null) {
-        await query('INSERT INTO prediction_access_logs (subject_id, match_id) VALUES (?, ?)', [subjectId, validMatchId]);
-      }
-      return new Response(JSON.stringify({ status: 'granted' }), { status: 200 });
+      return new Response(JSON.stringify({ 
+        status: 'granted',
+        access_type: 'individual_purchase',
+        message: 'Partido comprado individualmente'
+      }), { status: 200 });
     }
 
     // 4) Payment required → return pricing skeleton (server can enrich later)
