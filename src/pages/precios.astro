@@ -1,12 +1,23 @@
 ---
+// @ts-nocheck
 import Base from '../layouts/Base.astro';
 import { getSession } from 'auth-astro/server';
 import { metaBasic } from '../lib/seo.js';
 import { SITE_URL } from '../lib/env.js';
 import { getStripeProducts, formatPrice, getIntervalText, getPlanType, sortProducts } from '../lib/stripe-products.js';
+import { getUserSubscriptionPlan, getUserIdFromEmail } from '../lib/subscription-limits.js';
 
 const session = await getSession(Astro.request);
 const isLoggedIn = !!session?.user;
+
+// Obtener suscripción actual del usuario
+let currentSubscription = null;
+if (isLoggedIn && session.user.email) {
+  const userId = await getUserIdFromEmail(session.user.email);
+  if (userId) {
+    currentSubscription = await getUserSubscriptionPlan(userId);
+  }
+}
 
 // Obtener productos de Stripe
 let stripeProducts = { subscriptions: [], oneTime: [] };
@@ -72,6 +83,20 @@ function getProductBadge(planType) {
 function isPopular(planType) {
   return planType === '5day';
 }
+
+// Función para determinar si el usuario ya tiene este plan
+function hasCurrentPlan(planType, currentSubscription) {
+  if (!currentSubscription) return false;
+  
+  // Mapear entre tipos de plan y stripe_price_id
+  const planMapping = {
+    '2day': process.env.STRIPE_PRICE_SUB_2DAY,
+    '5day': process.env.STRIPE_PRICE_SUB_5DAY,
+    'unlimited': process.env.STRIPE_PRICE_SUB_UNLIMITED,
+  };
+  
+  return planMapping[planType] === currentSubscription.stripe_price_id;
+}
 ---
 
 <Base { ...meta }>
@@ -108,10 +133,20 @@ function isPopular(planType) {
           const features = getProductFeatures(planType);
           const badge = getProductBadge(planType);
           const price = product.prices[0]; // Tomar el primer precio
+          const userHasThisPlan = hasCurrentPlan(planType, currentSubscription);
+          const userHasAnyPlan = !!currentSubscription;
           
           return (
-            <div class={`card p-6 hover:shadow-lg transition-all duration-300 ${isPopularPlan ? 'border-2 border-brand-600 relative' : ''}`}>
-              {isPopularPlan && (
+            <div class={`card p-6 transition-all duration-300 ${
+              userHasThisPlan 
+                ? 'border-2 border-green-500 bg-green-50' 
+                : userHasAnyPlan 
+                  ? 'border border-gray-300 bg-gray-50 opacity-60' 
+                  : isPopularPlan 
+                    ? 'border-2 border-brand-600 relative hover:shadow-lg' 
+                    : 'hover:shadow-lg'
+            }`}>
+              {isPopularPlan && !userHasAnyPlan && (
                 <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <div class="bg-brand-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
                     MÁS POPULAR
@@ -119,16 +154,28 @@ function isPopular(planType) {
                 </div>
               )}
               
+              {userHasThisPlan && (
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <div class="bg-green-600 text-white px-4 py-1 rounded-full text-xs font-semibold">
+                    PLAN ACTUAL
+                  </div>
+                </div>
+              )}
+              
               <div class="text-center">
-                <h3 class="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
-                <div class="text-3xl font-extrabold text-gray-900 mb-1">
+                <h3 class={`text-xl font-bold mb-2 ${userHasThisPlan ? 'text-green-900' : userHasAnyPlan ? 'text-gray-500' : 'text-gray-900'}`}>
+                  {product.name}
+                </h3>
+                <div class={`text-3xl font-extrabold mb-1 ${userHasThisPlan ? 'text-green-900' : userHasAnyPlan ? 'text-gray-500' : 'text-gray-900'}`}>
                   {formatPrice(price.amount, price.currency)}
                 </div>
                 {badge && (
-                  <p class="text-sm text-gray-600 mb-6">{badge}</p>
+                  <p class={`text-sm mb-6 ${userHasThisPlan ? 'text-green-700' : userHasAnyPlan ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {badge}
+                  </p>
                 )}
                 {price.interval && price.type === 'recurring' && planType !== 'match' && (
-                  <p class="text-xs text-gray-500 mb-4">
+                  <p class={`text-xs mb-4 ${userHasThisPlan ? 'text-green-600' : userHasAnyPlan ? 'text-gray-400' : 'text-gray-500'}`}>
                     por {getIntervalText(price.interval, price.intervalCount)}
                   </p>
                 )}
@@ -136,8 +183,8 @@ function isPopular(planType) {
               
               <ul class="space-y-3 mb-6">
                 {features.map((feature) => (
-                  <li class="flex items-center text-sm">
-                    <svg class="w-5 h-5 text-emerald-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <li class={`flex items-center text-sm ${userHasThisPlan ? 'text-green-800' : userHasAnyPlan ? 'text-gray-500' : 'text-gray-700'}`}>
+                    <svg class={`w-5 h-5 mr-3 shrink-0 ${userHasThisPlan ? 'text-green-500' : userHasAnyPlan ? 'text-gray-400' : 'text-emerald-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     {feature}
@@ -147,6 +194,14 @@ function isPopular(planType) {
               
               {planType === 'match' ? (
                 <a href="/proximos" class="btn-secondary w-full">Ver próximos partidos</a>
+              ) : userHasThisPlan ? (
+                <button class="w-full py-2 px-4 rounded-lg bg-green-600 text-white font-semibold cursor-default">
+                  Estoy suscrito
+                </button>
+              ) : userHasAnyPlan ? (
+                <button class="w-full py-2 px-4 rounded-lg bg-gray-400 text-gray-600 font-semibold cursor-not-allowed" disabled>
+                  Suscribirse
+                </button>
               ) : (
                 <button
                   data-plan={planType}
@@ -289,6 +344,11 @@ function isPopular(planType) {
   // Añadir event listeners a los botones de suscripción
   document.querySelectorAll('.subscribe-btn').forEach(button => {
     button.addEventListener('click', (e) => {
+      // Verificar si el botón está deshabilitado
+      if (e.target.disabled) {
+        return;
+      }
+      
       if (!isLoggedIn) {
         window.location.href = '/login?redirect=/precios';
         return;

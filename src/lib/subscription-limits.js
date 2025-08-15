@@ -15,7 +15,7 @@ export async function getUserIdFromEmail(email) {
 export async function getUserSubscriptionPlan(userId) {
   if (!userId) return null;
 
-  console.log('🆔 getUserSubscriptionPlan called with userId:', userId);
+  // Get user subscription plan
 
   // Check for active subscriptions
 
@@ -35,8 +35,7 @@ export async function getUserSubscriptionPlan(userId) {
     LIMIT 1
   `, [userId]);
 
-  // Log results for debugging
-  console.log('🔍 Active subscription query result:', results);
+  // Check if user has active subscription
 
   if (results.length === 0) {
     // Si no hay suscripción activa, verificar si hay una sin current_period_end
