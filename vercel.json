@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "src/pages/api/**/*.js": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
       "source": "/(.*)\\.(css|js|woff2|woff|ttf)",
