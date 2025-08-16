@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(.*)\\.(?:css|js|woff2?|ttf)$",
+      "source": "/(.*\\.(css|js|woff2?|ttf))$",
       "headers": [
         {
           "key": "Cache-Control",
@@ -10,7 +10,7 @@
       ]
     },
     {
-      "source": "/(.*)\\.(?:png|jpg|jpeg|gif|webp|avif|svg)$",
+      "source": "/(.*\\.(png|jpg|jpeg|gif|webp|avif|svg))$",
       "headers": [
         {
           "key": "Cache-Control",
@@ -20,6 +20,15 @@
     },
     {
       "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
       "headers": [
         {
           "key": "Cache-Control",
