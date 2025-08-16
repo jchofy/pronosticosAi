@@ -7,16 +7,13 @@ const {
   format = 'webp', class: className = '', loading = 'lazy', decoding = 'async', fetchpriority = 'low', 
   width, height
 } = Astro.props;
-
-// Optimizar formato basado en soporte del navegador
-const optimizedFormat = format === 'webp' ? ['avif', 'webp'] : [format, 'webp'];
 ---
 <Image 
   src={src}
   alt={alt}
   widths={widths}
   sizes={sizes}
-  format={optimizedFormat}
+  format={[format, 'avif']}
   class={className}
   loading={loading}
   decoding={decoding}
