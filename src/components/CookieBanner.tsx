@@ -61,7 +61,7 @@ export const CookieBanner = ({ isVisible, onAccept }: CookieBannerProps) => {
                   Utilizamos cookies para mejorar tu experiencia, analizar el tráfico y personalizar el contenido. 
                   Al aceptar, nos ayudas a ofrecerte un mejor servicio.
                   <a 
-                    href="/politica-cookies" 
+                    href="/legal/cookies" 
                     className="text-brand-600 hover:text-brand-700 underline ml-1"
                     target="_blank"
                     rel="noopener noreferrer"

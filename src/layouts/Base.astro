@@ -162,12 +162,79 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
     </AgeVerificationWrapper>
     
     <footer id="app-footer" class="border-t border-gray-200 py-8">
-      <div class="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
-        <p>© {new Date().getFullYear()} PronosticosIA — Todos los derechos reservados</p>
-        <div class="flex items-center gap-4">
-          <a href="/sitemap.xml" class="hover:text-gray-700">Sitemap</a>
-          <a href="/proximos" class="hover:text-gray-700">Próximos</a>
-          <a href="/ligas" class="hover:text-gray-700">Ligas</a>
+      <div class="mx-auto max-w-5xl px-4">
+        <!-- Enlaces principales -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Navegación</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li><a href="/" class="hover:text-gray-900 transition-colors">Inicio</a></li>
+              <li><a href="/ligas" class="hover:text-gray-900 transition-colors">Ligas</a></li>
+              <li><a href="/proximos" class="hover:text-gray-900 transition-colors">Próximos</a></li>
+              <li><a href="/precios" class="hover:text-gray-900 transition-colors">Precios</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Legal</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li><a href="/legal/terminos" class="hover:text-gray-900 transition-colors">Términos y Condiciones</a></li>
+              <li><a href="/legal/privacidad" class="hover:text-gray-900 transition-colors">Política de Privacidad</a></li>
+              <li><a href="/legal/cookies" class="hover:text-gray-900 transition-colors">Política de Cookies</a></li>
+              <li><a href="/legal/aviso" class="hover:text-gray-900 transition-colors">Aviso Legal</a></li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Juego Responsable</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>
+                <span class="text-red-600 font-semibold">🔞 Solo +18</span>
+              </li>
+              <li>
+                <a href="https://www.fejar.org" target="_blank" rel="noopener" class="hover:text-gray-900 transition-colors">
+                  FEJAR - Ayuda
+                </a>
+              </li>
+              <li>
+                <a href="https://www.autoexclusion.es" target="_blank" rel="noopener" class="hover:text-gray-900 transition-colors">
+                  Autoexclusión
+                </a>
+              </li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Contacto</h3>
+            <ul class="space-y-2 text-sm text-gray-600">
+              <li>
+                <a href="mailto:info@pronosticosai.com" class="hover:text-gray-900 transition-colors">
+                  info@pronosticosai.com
+                </a>
+              </li>
+              <li>
+                <a href="/sitemap.xml" class="hover:text-gray-900 transition-colors">
+                  Sitemap
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        
+        <!-- Disclaimer y Copyright -->
+        <div class="border-t border-gray-200 pt-6">
+          <div class="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-500">
+            <div class="text-center md:text-left">
+              <p class="mb-1">© {new Date().getFullYear()} PronosticosIA — Todos los derechos reservados</p>
+              <p class="text-xs text-red-600 font-medium">
+                🔞 Solo mayores de 18 años • Juegue con responsabilidad • Los pronósticos no garantizan resultados
+              </p>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+              <span class="bg-green-100 text-green-800 px-2 py-1 rounded">RGPD Compliant</span>
+              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">SSL Seguro</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
