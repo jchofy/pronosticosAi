@@ -3,7 +3,7 @@
 import { SITE_URL } from '../lib/env.js';
 import AuthMenu from '../components/AuthMenu.astro';
 import QuickUsageStatus from '../components/QuickUsageStatus.astro';
-import { AgeVerificationWrapper } from '../components/AgeVerificationWrapper.tsx';
+import { ComplianceOverlays } from '../components/ComplianceOverlays.tsx';
 import '../styles/tailwind.css';
 const {
   title = 'Pronósticos y Partidos',
@@ -155,11 +155,12 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
       </div>
     </aside>
 
-    <AgeVerificationWrapper client:load>
-      <main id="app-main" class="mx-auto max-w-5xl px-4 py-6">
-        <slot />
-      </main>
-    </AgeVerificationWrapper>
+    <main id="app-main" class="mx-auto max-w-5xl px-4 py-6">
+      <slot />
+    </main>
+    
+    <!-- Componente React solo para los modales/banners -->
+    <ComplianceOverlays client:load />
     
     <footer id="app-footer" class="border-t border-gray-200 py-8">
       <div class="mx-auto max-w-5xl px-4">
