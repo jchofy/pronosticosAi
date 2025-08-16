@@ -10,4 +10,11 @@ export default defineConfig({
   output: 'server',
   adapter: vercel(),
   integrations: [tailwind(), auth(), react()],
+  vite: {
+    build: {
+      minify: 'esbuild',
+      cssMinify: 'esbuild',
+    }
+  },
+  compressHTML: true
 }); 

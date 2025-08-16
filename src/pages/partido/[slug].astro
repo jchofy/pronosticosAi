@@ -107,7 +107,7 @@ const getContrastTextClass = (hex) => {
   return luminance > 0.6 ? 'text-gray-900' : 'text-white';
 };
 ---
-<Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={[meta.jsonLd, meta.paywallJsonLd]} og={meta.og} noindex={isOld}>
+<Base title={meta.title} description={meta.description} canonical={meta.canonical} jsonLd={[meta.jsonLd, meta.paywallJsonLd, meta.faqJsonLd]} og={meta.og} noindex={isOld}>
   {match ? (
     <article class="prose prose-sm max-w-none">
       <div class="mb-2 flex items-center justify-between text-xs text-gray-600">
@@ -123,7 +123,7 @@ const getContrastTextClass = (hex) => {
 
       <header class="mb-6 ">
         <h1 class="text-xl md:text-2xl font-bold leading-snug tracking-tight text-gray-900 not-prose">
-          Pronóstico con IA {match.home_team_name} vs {match.away_team_name} – análisis de valor y cuotas {match.matchday ? `(J${match.matchday}, ${fmtDateEsShort(match.date)})` : `(${fmtDateEsShort(match.date)})`}
+          Pronósticos {match.home_team_name} vs {match.away_team_name} – {match.league_name} ({fmtDateEsShort(match.date)})
         </h1>
         <hr class="my-4  mb-6 "/>
        
@@ -372,9 +372,12 @@ const getContrastTextClass = (hex) => {
             };
             
             // Hacer funciones globales para compatibilidad con PredictionAccess
-            (window as any).renderPrediction = renderPrediction;
-            (window as any).autoOpenPrediction = autoOpen;
-            (window as any).handlePredictionClick = () => {
+            // @ts-ignore
+            window.renderPrediction = renderPrediction;
+            // @ts-ignore
+            window.autoOpenPrediction = autoOpen;
+            // @ts-ignore
+            window.handlePredictionClick = () => {
               btn && btn.click();
             };
             
@@ -450,7 +453,8 @@ const getContrastTextClass = (hex) => {
             }
             
             // Función global para compra de partido individual
-            (window as any).handleMatchPurchase = async function(matchId) {
+            // @ts-ignore
+            window.handleMatchPurchase = async function(matchId) {
               try {
                 console.log('🛒 Starting match purchase for matchId:', matchId);
                 
@@ -608,21 +612,33 @@ const getContrastTextClass = (hex) => {
           </div>
         </section>
         <section class="prose prose-sm max-w-none px-4 pt-4">
-          <h2>Pronóstico de fútbol con inteligencia artificial: {match.home_team_name} vs {match.away_team_name}</h2>
+          <h2>Pronóstico y valor esperado</h2>
           <p>Pronóstico y previa de {match.league_name}. Evaluamos el {match.home_team_name} vs {match.away_team_name} con un modelo de <strong>valor esperado</strong> y técnicas de <strong>inteligencia artificial</strong> para estimar probabilidades ajustadas.</p>
 
-          <h3>Cuotas y probabilidades (valor esperado)</h3>
+          <h2>Cuotas y fair odds</h2>
           <p>Analizamos las principales <strong>cuotas</strong> comparándolas con <strong>precios justos</strong> del mercado. Así identificamos valor en mercados como <strong>1X2</strong>, <strong>ambos marcan</strong> y <strong>over/under</strong>.</p>
-          <h3>Apuesta recomendada y stake</h3>
+          
+          <h2>Datos y forma reciente</h2>
+          <p>Consideramos estadísticas recientes de ambos equipos, incluyendo goles a favor, goles en contra, rendimiento como local/visitante y estado físico del plantel.</p>
+          
+          <h2>Probabilidades (modelo IA)</h2>
+          <p>Nuestro modelo de inteligencia artificial procesa datos históricos y actuales para generar probabilidades ajustadas que reflejan las condiciones reales del partido.</p>
+          
+          <h2>Pick recomendado y stake</h2>
           <p>Mostramos primero la apuesta recomendada, su cuota aproximada y una sugerencia de <strong>stake responsable</strong>. Recuerda que las cuotas pueden variar y que el riesgo nunca es cero.</p>
-          <h3>Riesgos y escenarios</h3>
-          <ul>
-            <li>Sesgo por estado de forma y rotaciones de última hora.</li>
-            <li>Variabilidad en <strong>cuotas</strong> según casa y momento.</li>
-            <li>Condiciones de partido: bajas, clima y congestión de calendario.</li>
-          </ul>
-          <h3>Metodología</h3>
-          <p>El modelo combina métricas ofensivas/defensivas recientes, fuerza del rival y <em>bayesian updating</em>. La salida se traduce a <strong>probabilidades</strong> y <strong>precios justos</strong> para los principales mercados.</p>
+          
+          <h2>Preguntas frecuentes</h2>
+          <h3>¿A qué hora se juega el partido?</h3>
+          <p>El partido {match.home_team_name} vs {match.away_team_name} se juega el {fmtDateTime(match.date)}.</p>
+          
+          <h3>¿Dónde se puede ver el partido?</h3>
+          <p>El partido se jugará en {match.stadium || 'el estadio del equipo local'}. Para ver el partido en televisión, consulta la programación de las cadenas que emiten {match.league_name}.</p>
+          
+          <h3>¿Qué cuota tiene más valor?</h3>
+          <p>Nuestro análisis identifica las cuotas con mejor valor esperado comparando precios de mercado con probabilidades justas calculadas por nuestro modelo de IA.</p>
+          
+          <h3>¿Cuál es el pick recomendado y stake?</h3>
+          <p>El pick recomendado se muestra en la sección de pronóstico de arriba, junto con la gestión de stake sugerida basada en el valor esperado y el riesgo.</p>
         </section>
 
       {bettingHouses && bettingHouses.length > 0 && (
@@ -658,6 +674,81 @@ const getContrastTextClass = (hex) => {
           <p class="mt-2 text-[11px] text-gray-500">Enlaces de afiliado. Juega con responsabilidad.</p>
         </section>
       )}
+      
+      <!-- Enlaces internos -->
+      <section class="not-prose mt-8 bg-gray-50 rounded-2xl p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-bold mb-4 text-gray-900">Más pronósticos de {match.league_name}</h3>
+            <div class="space-y-3">
+              <a href={`/liga/${match.league_slug}`} class="block p-3 bg-white rounded-lg border border-gray-200 hover:border-brand-300 hover:shadow-sm transition-all">
+                <div class="flex items-center gap-3">
+                  {match.league_logo && (
+                    <img src={`/${String(match.league_logo).replace(/^\/?public\//,'').replace(/^\//,'')}`} alt={match.league_name} class="h-8 w-8 rounded object-contain" width="32" height="32" loading="lazy" decoding="async" />
+                  )}
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900 truncate">Ver todos los partidos de {match.league_name}</div>
+                    <div class="text-sm text-gray-600">Pronósticos y clasificación</div>
+                  </div>
+                </div>
+              </a>
+              <a href="/proximos" class="block p-3 bg-white rounded-lg border border-gray-200 hover:border-brand-300 hover:shadow-sm transition-all">
+                <div class="flex items-center gap-3">
+                  <svg class="h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900 truncate">Próximos partidos</div>
+                    <div class="text-sm text-gray-600">Todos los pronósticos disponibles</div>
+                  </div>
+                </div>
+              </a>
+              <a href={`/clasificacion/${match.league_slug}`} class="block p-3 bg-white rounded-lg border border-gray-200 hover:border-brand-300 hover:shadow-sm transition-all">
+                <div class="flex items-center gap-3">
+                  <svg class="h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900 truncate">Clasificación {match.league_name}</div>
+                    <div class="text-sm text-gray-600">Tabla de posiciones actualizada</div>
+                  </div>
+                </div>
+              </a>
+            </div>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-bold mb-4 text-gray-900">Guías y metodología</h3>
+            <div class="space-y-3">
+              <div class="p-3 bg-white rounded-lg border border-gray-200">
+                <div class="flex items-start gap-3">
+                  <svg class="h-6 w-6 text-brand-500 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900">Cómo funcionan nuestros pronósticos</div>
+                    <div class="text-sm text-gray-600 mt-1">Modelo de IA que combina métricas ofensivas/defensivas, fuerza del rival y análisis bayesiano para calcular probabilidades ajustadas y precios justos.</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="p-3 bg-white rounded-lg border border-gray-200">
+                <div class="flex items-start gap-3">
+                  <svg class="h-6 w-6 text-green-500 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900">Gestión de riesgo y bankroll</div>
+                    <div class="text-sm text-gray-600 mt-1">Nunca apostes más del 1-3% de tu bankroll por partido. El valor esperado positivo no garantiza ganancias a corto plazo.</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="p-3 bg-white rounded-lg border border-gray-200">
+                <div class="flex items-start gap-3">
+                  <svg class="h-6 w-6 text-orange-500 mt-0.5 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                  <div class="min-w-0">
+                    <div class="font-medium text-gray-900">Juego responsable</div>
+                    <div class="text-sm text-gray-600 mt-1">Las apuestas pueden crear adicción. Juega solo por entretenimiento y nunca persiguas las pérdidas. Solo para mayores de 18 años.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </article>
   ) : (
     <div class="card p-6 text-red-600">Service unavailable</div>

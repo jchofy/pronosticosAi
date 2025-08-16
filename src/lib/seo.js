@@ -27,16 +27,19 @@ const toEsShortDate = (value) => {
   } catch { return ''; }
 };
 
-export const eventJsonLd = (match) => {
+export const eventJsonLd = (match, siteUrl) => {
   const name = `${match.home_team_name || match.home_team} vs ${match.away_team_name || match.away_team}`;
   const startDate = toISO(match.date);
   const locationName = match.stadium || 'Estadio';
   const capacity = match.stadium_capacity || match.capacity || null;
+  const canonical = `${siteUrl.replace(/\/$/, '')}/partido/${match.slug}`;
   return {
     '@context': 'https://schema.org',
     '@type': 'SportsEvent',
     name,
+    sport: 'Soccer',
     startDate,
+    url: canonical,
     eventStatus: new Date(match.date) < new Date() ? 'https://schema.org/EventCompleted' : 'https://schema.org/EventScheduled',
     location: {
       '@type': 'Place',
@@ -63,13 +66,13 @@ export const pageMetaForMatch = (match, siteUrl) => {
   const home = match.home_team_name || match.home_team;
   const away = match.away_team_name || match.away_team;
   const jornada = match.matchday ? ` (J${match.matchday})` : '';
-  const title = `${home} vs ${away}${jornada}: Pronóstico con IA  - ${dateEs}`;
+  const title = `Pronósticos de fútbol: ${home} vs ${away}${jornada} – ${league} (${dateEs})`;
   const dash = '–';
   const teamsStr = `${home}${dash}${away}`;
   // Ej.: "Liverpool–Bournemouth Premier League 2025/26: pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo."
-  const description = `${teamsStr} ${league}: pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo.`;
+  const description = `Pronósticos de partidos de fútbol: ${teamsStr} ${league} – análisis con IA, cuotas y valor esperado. Picks con fair odds y gestión de riesgo.`;
   const canonical = `${siteUrl.replace(/\/$/, '')}/partido/${match.slug}`;
-  const jsonLd = eventJsonLd(match);
+  const jsonLd = eventJsonLd(match, siteUrl);
   const ogImage = `${siteUrl.replace(/\/$/, '')}/og/partido/${match.slug}.png`;
   const og = {
     title,
@@ -104,9 +107,10 @@ export const pageMetaForMatch = (match, siteUrl) => {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [
-      { '@type': 'Question', name: '¿A qué hora se juega?', acceptedAnswer: { '@type': 'Answer', text: dateStr } },
-      { '@type': 'Question', name: '¿Dónde se juega?', acceptedAnswer: { '@type': 'Answer', text: `${match.stadium || 'N/D'}` } },
-      { '@type': 'Question', name: '¿Cuál es el pronóstico?', acceptedAnswer: { '@type': 'Answer', text: 'El contenido del pronóstico es de pago; disponible con 1 acceso gratis al día o suscripción.' } },
+      { '@type': 'Question', name: '¿A qué hora se juega el partido?', acceptedAnswer: { '@type': 'Answer', text: `El partido ${home} vs ${away} se juega el ${dateStr}.` } },
+      { '@type': 'Question', name: '¿Dónde se puede ver el partido?', acceptedAnswer: { '@type': 'Answer', text: `El partido se jugará en ${match.stadium || 'el estadio del equipo local'}. Para ver el partido en televisión, consulta la programación de las cadenas que emiten ${league}.` } },
+      { '@type': 'Question', name: '¿Qué cuota tiene más valor?', acceptedAnswer: { '@type': 'Answer', text: 'Nuestro análisis identifica las cuotas con mejor valor esperado comparando precios de mercado con probabilidades justas calculadas por nuestro modelo de IA.' } },
+      { '@type': 'Question', name: '¿Cuál es el pick recomendado y stake?', acceptedAnswer: { '@type': 'Answer', text: 'El pick recomendado se muestra en la sección de pronóstico, junto con la gestión de stake sugerida basada en el valor esperado y el riesgo.' } },
     ],
   };
   return { title, description, canonical, jsonLd, og, paywallJsonLd, breadcrumbsJsonLd, faqJsonLd };
