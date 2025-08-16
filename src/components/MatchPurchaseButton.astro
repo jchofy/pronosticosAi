@@ -69,6 +69,15 @@ const showPurchaseButton = !hasPurchased && !hasSubscription;
     try {
       console.log('🛒 Starting purchase for match:', matchId);
       
+      // Track purchase button click
+      if (window.trackActivity) {
+        window.trackActivity('payment_attempt', {
+          element: 'purchase_button',
+          matchId: matchId,
+          details: 'Match purchase button clicked'
+        });
+      }
+      
       const response = await fetch('/api/pay/match', {
         method: 'POST',
         headers: {

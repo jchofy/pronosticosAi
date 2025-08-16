@@ -65,6 +65,16 @@ if (isLoggedIn && session?.user?.email) {
         const plan = e.target.dataset.plan;
         const priceId = e.target.dataset.priceId;
         
+        // Track subscription button click
+        if (window.trackActivity) {
+          window.trackActivity('subscription_attempt', {
+            element: 'subscription_button',
+            plan: plan,
+            priceId: priceId,
+            details: `Subscription button clicked for plan: ${plan}`
+          });
+        }
+        
         // Llamar a la función global definida en la página principal
         if (window.handleSubscribe) {
           window.handleSubscribe(plan, priceId);

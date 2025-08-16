@@ -2,8 +2,13 @@ import { query } from '../../lib/db.js';
 import { getOrCreateSubject } from '../../lib/subject.js';
 import { getSession } from 'auth-astro/server';
 import { getUserIdFromEmail } from '../../lib/access.js';
+import { logCookieConsent, logError } from '../../lib/telegram-logger.js';
+import { trackApiCall, extractRequestInfo } from '../../lib/activity-tracker.js';
 
 export async function POST({ request, cookies, clientAddress }) {
+  const startTime = Date.now();
+  const requestInfo = extractRequestInfo(request);
+  
   try {
     const { accepted } = await request.json();
     
@@ -48,6 +53,17 @@ export async function POST({ request, cookies, clientAddress }) {
 
     await Promise.all(updates);
 
+    // Log cookie consent
+    await logCookieConsent({
+      userId: userId ? String(userId) : null,
+      accepted: accepted,
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track successful API call
+    await trackApiCall({ request }, '/api/cookie-consent', 'POST', 200, startTime);
+
     return new Response(JSON.stringify({ 
       success: true, 
       accepted,
@@ -60,6 +76,20 @@ export async function POST({ request, cookies, clientAddress }) {
 
   } catch (error) {
     console.error('Error saving cookie consent:', error);
+    
+    // Log error
+    await logError({
+      error: error.message,
+      stack: error.stack,
+      page: '/api/cookie-consent',
+      url: requestInfo.url,
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track failed API call
+    await trackApiCall({ request }, '/api/cookie-consent', 'POST', 500, startTime);
+    
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

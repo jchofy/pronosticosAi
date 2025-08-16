@@ -5,6 +5,9 @@ import AuthMenu from '../components/AuthMenu.astro';
 import QuickUsageStatus from '../components/QuickUsageStatus.astro';
 import { ComplianceOverlays } from '../components/ComplianceOverlays.tsx';
 import '../styles/tailwind.css';
+
+// Server-side page tracking removed to prevent duplicates
+// Client-side tracking will handle page visits more accurately
 const {
   title = 'Pronósticos y Partidos',
   description = 'Partidos, resultados y pronósticos de fútbol con análisis y estadísticas.',
@@ -340,6 +343,317 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
       // El evento ya se maneja en PredictionAccess.astro, pero podemos agregar más lógica aquí si es necesario
       // Por ejemplo, actualizar otros elementos de la UI, mostrar notificaciones, etc.
     });
+  </script>
+
+  <script type="module">
+    // @ts-nocheck
+    // Activity Tracking - Client-side tracking initialization
+    (() => {
+      // Prevent multiple initializations
+      if (window.__activityTrackerInitialized) {
+        return;
+      }
+      window.__activityTrackerInitialized = true;
+
+      // Global tracking state
+      if (!window.__trackingState) {
+        window.__trackingState = {
+          lastPageVisit: 0,
+          lastClickTime: 0,
+          currentPath: null,
+          pageStartTime: Date.now()
+        };
+      }
+
+      const DEBOUNCE_TIME = 1500; // 1.5 seconds for page visits
+      const CLICK_DEBOUNCE_TIME = 500; // 500ms for clicks
+
+      // Get user ID from session if available
+      const getCurrentUserId = () => {
+        // Try to get user ID from a meta tag or global variable if available
+        const userMeta = document.querySelector('meta[name="user-id"]');
+        return userMeta ? userMeta.content : null;
+      };
+
+      // Track initial page visit when page loads
+      const trackInitialPageVisit = async (userId) => {
+        const currentPath = window.location.pathname;
+        const now = Date.now();
+        
+        // Check if this page load is the result of a tracked navigation
+        const navigationData = sessionStorage.getItem('__trackingNavigation');
+        let skipDuplicateCheck = false;
+        
+        if (navigationData) {
+          try {
+            const navInfo = JSON.parse(navigationData);
+            // If this is the destination page of a recent navigation, allow it
+            if (navInfo.toPage === currentPath && (now - navInfo.timestamp) < 3000) {
+              skipDuplicateCheck = true;
+              // Clear the navigation data since we've used it
+              sessionStorage.removeItem('__trackingNavigation');
+            }
+          } catch (e) {
+            sessionStorage.removeItem('__trackingNavigation');
+          }
+        }
+        
+        // Skip if same page was tracked recently (unless this is a tracked navigation)
+        if (!skipDuplicateCheck && 
+            window.__trackingState.currentPath === currentPath && 
+            now - window.__trackingState.lastPageVisit < DEBOUNCE_TIME) {
+          return;
+        }
+
+        window.__trackingState.lastPageVisit = now;
+        window.__trackingState.currentPath = currentPath;
+        window.__trackingState.pageStartTime = now;
+
+        try {
+          await fetch('/api/track-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'page_visit',
+              page: currentPath,
+              url: window.location.href,
+              userId,
+              title: document.title
+            })
+          });
+        } catch (error) {
+          console.error('Error tracking page visit:', error);
+        }
+      };
+
+      // Initialize client-side tracking
+      const initClientTracking = (userId = null) => {
+        // Track initial page visit
+        trackInitialPageVisit(userId);
+
+        // Track page visibility changes (only for duration tracking)
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'hidden') {
+            trackClientPageExit(userId);
+          }
+        });
+
+        // Track beforeunload (page exit)
+        window.addEventListener('beforeunload', () => {
+          trackClientPageExit(userId);
+        });
+
+        // Track clicks on important elements
+        document.addEventListener('click', (event) => {
+          trackClientClick(event, userId);
+        });
+
+        // Track form submissions
+        document.addEventListener('submit', (event) => {
+          trackClientFormSubmission(event, userId);
+        });
+      };
+
+      // Track client-side button click (only for specific important actions)
+      const trackClientClick = async (event, userId) => {
+        try {
+          const element = event.target.closest('button, a[href], [data-track]');
+          if (!element) return;
+
+          // Only track specific important buttons
+          const shouldTrack = isImportantAction(element);
+          if (!shouldTrack) {
+            // Still handle navigation for page tracking, but don't send button click event
+            handleNavigationTracking(element);
+            return;
+          }
+
+          // Debounce rapid clicks
+          const now = Date.now();
+          if (now - window.__trackingState.lastClickTime < CLICK_DEBOUNCE_TIME) return;
+          window.__trackingState.lastClickTime = now;
+
+          // Handle navigation tracking
+          handleNavigationTracking(element);
+
+          const elementInfo = getElementInfo(element);
+          
+          await fetch('/api/track-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'button_click',
+              element: elementInfo,
+              page: window.location.pathname,
+              url: window.location.href,
+              userId
+            })
+          });
+        } catch (error) {
+          console.error('Error tracking click:', error);
+        }
+      };
+
+      // Check if the clicked element is an important action we want to track
+      const isImportantAction = (element) => {
+        const text = element.textContent?.trim().toLowerCase() || '';
+        const classes = element.className || '';
+        const href = element.href || '';
+        const id = element.id || '';
+
+        // Track Stripe/subscription buttons
+        if (classes.includes('subscribe-btn') || 
+            text.includes('suscribirse ahora') ||
+            text.includes('suscribirse') ||
+            text.includes('iniciar sesión para suscribirse') ||
+            href.includes('stripe') ||
+            href.includes('checkout')) {
+          return true;
+        }
+
+        // Track purchase/payment buttons
+        if (text.includes('comprar predicción') ||
+            text.includes('comprar este partido') ||
+            text.includes('comprar solo este') ||
+            id === 'btn-buy-match' ||
+            classes.includes('purchase-btn')) {
+          return true;
+        }
+
+        // Track prediction access buttons (Ver pronóstico)
+        if (text.includes('ver pronóstico') ||
+            id === 'btn-view-prediction') {
+          return true;
+        }
+
+        return false;
+      };
+
+      // Handle navigation tracking separately from button click tracking
+      const handleNavigationTracking = (element) => {
+        const isNavigationLink = element.tagName.toLowerCase() === 'a' && 
+                                 element.href && 
+                                 element.href !== window.location.href &&
+                                 !element.href.startsWith('#') &&
+                                 !element.target;
+
+        if (isNavigationLink) {
+          sessionStorage.setItem('__trackingNavigation', JSON.stringify({
+            timestamp: Date.now(),
+            fromPage: window.location.pathname,
+            toPage: new URL(element.href).pathname,
+            clicked: true
+          }));
+        }
+      };
+
+      // Track client-side form submission
+      const trackClientFormSubmission = async (event, userId) => {
+        try {
+          const form = event.target;
+          const formInfo = {
+            id: form.id || 'unknown',
+            action: form.action || window.location.href,
+            method: form.method || 'GET'
+          };
+
+          await fetch('/api/track-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'form_submission',
+              element: `Form: ${formInfo.id}`,
+              details: `${formInfo.method.toUpperCase()} ${formInfo.action}`,
+              page: window.location.pathname,
+              url: window.location.href,
+              userId
+            })
+          });
+        } catch (error) {
+          console.error('Error tracking form submission:', error);
+        }
+      };
+
+      // Track client-side page exit (duration only, no duplicate page visits)
+      const trackClientPageExit = async (userId) => {
+        try {
+          // Use our page start time instead of performance.timing
+          const duration = Date.now() - window.__trackingState.pageStartTime;
+          
+          // Only send if duration is meaningful (more than 2 seconds)
+          if (duration < 2000) return;
+
+          const data = JSON.stringify({
+            type: 'page_duration',
+            page: window.location.pathname,
+            url: window.location.href,
+            userId,
+            duration
+          });
+
+          if (navigator.sendBeacon) {
+            navigator.sendBeacon('/api/track-activity', data);
+          }
+        } catch (error) {
+          console.error('Error tracking page exit:', error);
+        }
+      };
+
+      // Get element information for tracking
+      const getElementInfo = (element) => {
+        const tag = element.tagName.toLowerCase();
+        const id = element.id ? `#${element.id}` : '';
+        const classes = element.className ? `.${element.className.split(' ').slice(0, 3).join('.')}` : '';
+        const text = element.textContent?.trim().substring(0, 50) || '';
+        const href = element.href || '';
+        
+        let info = tag + id + classes;
+        if (text) info += ` "${text}"`;
+        if (href && href !== window.location.href) info += ` -> ${href}`;
+        
+        return info;
+      };
+
+      // Manual client-side tracking function (available globally)
+      window.trackActivity = async (type, data = {}) => {
+        try {
+          await fetch('/api/track-activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type,
+              page: window.location.pathname,
+              url: window.location.href,
+              userId: getCurrentUserId(),
+              ...data
+            })
+          });
+        } catch (error) {
+          console.error('Error tracking activity:', error);
+        }
+      };
+
+      // Handle SPA navigation (Astro View Transitions)
+      const handleNavigation = () => {
+        // Small delay to ensure new page is loaded
+        setTimeout(() => {
+          trackInitialPageVisit(getCurrentUserId());
+        }, 100);
+      };
+
+      // Listen for Astro navigation events
+      document.addEventListener('astro:page-load', handleNavigation);
+      document.addEventListener('astro:after-swap', handleNavigation);
+
+      // Initialize tracking when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          initClientTracking(getCurrentUserId());
+        });
+      } else {
+        initClientTracking(getCurrentUserId());
+      }
+    })();
   </script>
   </body>
 </html> 

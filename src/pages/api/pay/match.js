@@ -2,8 +2,13 @@ import { getSession } from 'auth-astro/server';
 import { stripe } from '../../../lib/stripe.js';
 import { query } from '../../../lib/db.js';
 import { STRIPE_PRICE_MATCH, SITE_URL } from '../../../lib/env.js';
+import { logPaymentAttempt, logError } from '../../../lib/telegram-logger.js';
+import { trackApiCall, extractRequestInfo, getUserId } from '../../../lib/activity-tracker.js';
 
-export async function POST({ request }) {
+export async function POST({ request, clientAddress }) {
+  const startTime = Date.now();
+  const requestInfo = extractRequestInfo(request);
+  
   try {
     console.log('🏈 Match purchase request started');
     
@@ -165,6 +170,20 @@ export async function POST({ request }) {
       throw dbError;
     }
 
+    // Log payment attempt
+    await logPaymentAttempt({
+      userId: String(user.id),
+      amount: '5.00', // Assuming standard match price
+      currency: 'EUR',
+      plan: 'single_match',
+      matchId: String(matchId),
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track successful API call
+    await trackApiCall({ request }, '/api/pay/match', 'POST', 200, startTime);
+
     console.log('🎯 Returning checkout URL:', checkoutSession.url);
     return new Response(
       JSON.stringify({ 
@@ -178,6 +197,19 @@ export async function POST({ request }) {
     console.error('- Error stack:', error.stack);
     console.error('- Error code:', error.code);
     console.error('- Full error:', error);
+    
+    // Log error
+    await logError({
+      error: error.message,
+      stack: error.stack,
+      page: '/api/pay/match',
+      url: requestInfo.url,
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track failed API call
+    await trackApiCall({ request }, '/api/pay/match', 'POST', 500, startTime);
     
     return new Response(
       JSON.stringify({ 

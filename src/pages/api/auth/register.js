@@ -1,12 +1,17 @@
 import bcrypt from 'bcrypt';
 import { query } from '../../../lib/db.js';
+import { logUserRegistration, logError } from '../../../lib/telegram-logger.js';
+import { trackApiCall, extractRequestInfo } from '../../../lib/activity-tracker.js';
 
 /**
  * POST /api/auth/register
  * Body: { email, password, name }
  * Creates a new user account with email/password
  */
-export async function POST({ request }) {
+export async function POST({ request, clientAddress }) {
+  const startTime = Date.now();
+  const requestInfo = extractRequestInfo(request);
+  
   try {
     const body = await request.json();
     const { email, password, name } = body;
@@ -60,6 +65,18 @@ export async function POST({ request }) {
 
     const userId = result.insertId;
 
+    // Log successful registration
+    await logUserRegistration({
+      userId: String(userId),
+      email,
+      method: 'email',
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track API call
+    await trackApiCall({ request }, '/api/auth/register', 'POST', 201, startTime);
+
     return new Response(JSON.stringify({ 
       success: true, 
       user: { id: userId, email, name } 
@@ -67,6 +84,20 @@ export async function POST({ request }) {
 
   } catch (e) {
     console.error('Registration error:', e);
+    
+    // Log error
+    await logError({
+      error: e.message,
+      stack: e.stack,
+      page: '/api/auth/register',
+      url: requestInfo.url,
+      userAgent: requestInfo.userAgent,
+      ip: requestInfo.ip
+    });
+
+    // Track failed API call
+    await trackApiCall({ request }, '/api/auth/register', 'POST', 500, startTime);
+    
     return new Response(JSON.stringify({ error: 'server_error' }), { status: 500 });
   }
 }
