@@ -12,9 +12,21 @@ const resolveLogo = (p) => {
 const fmtShort = (s) => {
   try {
     const d = new Date(s);
-    const day = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+    const matchDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    
     const time = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    return `${day} · ${time}`;
+    
+    if (matchDate.getTime() === today.getTime()) {
+      return `Hoy · ${time}`;
+    } else if (matchDate.getTime() === tomorrow.getTime()) {
+      return `Mañana · ${time}`;
+    } else {
+      const day = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+      return `${day} · ${time}`;
+    }
   } catch { return ''; }
 };
 
