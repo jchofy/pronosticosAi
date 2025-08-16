@@ -31,17 +31,8 @@ export const ComplianceOverlays = () => {
   // Determine if we should show cookie banner (only after age is verified and user is of age)
   const shouldShowCookieBanner = (isVerified === true || isVerified === 1) && showCookieBanner && !showAgeModal;
 
-  // Show loading overlay while checking verification status
-  if (isLoadingAge || isLoadingCookies) {
-    return (
-      <div className="fixed inset-0 z-[100] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
-  }
+  // Loading states are handled internally - no UI blocking
+  // The hooks will manage the loading state and show overlays when ready
 
   // Show restriction overlay if user is not of age
   if (isVerified === false || isVerified === 0) {
