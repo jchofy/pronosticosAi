@@ -16,9 +16,14 @@ export default defineConfig({
       cssMinify: 'esbuild',
       rollupOptions: {
         output: {
-          compact: true
+          compact: true,
+          manualChunks: {
+            react: ['react', 'react-dom'],
+            vendor: ['astro']
+          }
         }
-      }
+      },
+      chunkSizeWarningLimit: 1000
     }
   },
   compressHTML: true

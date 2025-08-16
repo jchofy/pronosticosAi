@@ -2,7 +2,16 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
-  content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,vue,ts,tsx}'],
+  content: [
+    './src/**/*.{astro,html,js,jsx,md,mdx,svelte,vue,ts,tsx}',
+    './public/**/*.html'
+  ],
+  corePlugins: {
+    preflight: true,
+  },
+  experimental: {
+    optimizeUniversalDefaults: true
+  },
   theme: {
     container: {
       center: true,

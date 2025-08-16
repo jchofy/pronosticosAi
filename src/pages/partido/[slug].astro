@@ -146,7 +146,7 @@ const getContrastTextClass = (hex) => {
         )}
       </header>
 
-      <section class="not-prose card p-6 md:p-7 bg-white/80">
+      <section class="not-prose card p-6 md:p-7 bg-white/80" style="content-visibility:auto;contain-intrinsic-size:1px 400px;">
         <h2 class="text-xl md:text-2xl font-extrabold">Pronóstico</h2>
         <PredictionAccess matchId={match.id} homeTeamName={match.home_team_name} awayTeamName={match.away_team_name} />
                   <div id="prediction-upsell" class="mt-8 hidden">
@@ -256,7 +256,7 @@ const getContrastTextClass = (hex) => {
             </div>
           </div>
         </div>
-        <script>
+        <script defer>
           (function(){
             const boot = () => {
             /** @type {HTMLButtonElement|null} */
@@ -383,9 +383,9 @@ const getContrastTextClass = (hex) => {
             
             if ('requestIdleCallback' in window) {
               // @ts-ignore
-              window.requestIdleCallback(autoOpen);
+              window.requestIdleCallback(autoOpen, { timeout: 1000 });
             } else {
-              setTimeout(autoOpen, 0);
+              setTimeout(autoOpen, 32); // Delay non-critical execution
             }
 
             // Event listener removed - now handled by PredictionAccess component
@@ -447,9 +447,9 @@ const getContrastTextClass = (hex) => {
             };
             if ('requestIdleCallback' in window) {
               // @ts-ignore
-              window.requestIdleCallback(boot);
+              window.requestIdleCallback(boot, { timeout: 2000 });
             } else {
-              setTimeout(boot, 0);
+              setTimeout(boot, 16); // Next frame
             }
             
             // Función global para compra de partido individual
