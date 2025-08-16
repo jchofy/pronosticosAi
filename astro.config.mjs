@@ -26,7 +26,7 @@ export default defineConfig({
         }
       },
       target: 'es2020',
-      modulePreload: { polyfill: false }
+      modulePreload: { polyfill: false },
       chunkSizeWarningLimit: 1000
     }
   },
