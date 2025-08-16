@@ -66,11 +66,11 @@ export const pageMetaForMatch = (match, siteUrl) => {
   const home = match.home_team_name || match.home_team;
   const away = match.away_team_name || match.away_team;
   const jornada = match.matchday ? ` (J${match.matchday})` : '';
-  const title = `Pronósticos de fútbol: ${home} vs ${away}${jornada} – ${league} (${dateEs})`;
+  const title = `Pronósticos ${home} vs ${away}${jornada} – ${league} ${dateEs}`;
   const dash = '–';
   const teamsStr = `${home}${dash}${away}`;
   // Ej.: "Liverpool–Bournemouth Premier League 2025/26: pronóstico con IA centrado en valor esperado. Probabilidades ajustadas, fair odds y análisis de riesgo."
-  const description = `Pronósticos de partidos de fútbol: ${teamsStr} ${league} – análisis con IA, cuotas y valor esperado. Picks con fair odds y gestión de riesgo.`;
+  const description = `Pronósticos ${teamsStr} ${league} – análisis IA, cuotas y valor esperado. Picks con fair odds y gestión de riesgo.`;
   const canonical = `${siteUrl.replace(/\/$/, '')}/partido/${match.slug}`;
   const jsonLd = eventJsonLd(match, siteUrl);
   const ogImage = `${siteUrl.replace(/\/$/, '')}/og/partido/${match.slug}.png`;

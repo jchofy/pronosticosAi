@@ -10,8 +10,8 @@
   Allow: /
   Sitemap: https://www.pronosticosia.com/sitemap.xml
   ```
-- [ ] Deploy y verificación en `https://www.pronosticosia.com/robots.txt` (200 OK).
-- [ ] En Search Console: “Probar robots.txt” sin bloqueos críticos.
+- [x] Deploy y verificación en `https://www.pronosticosia.com/robots.txt` (200 OK).
+- [x] En Search Console: "Probar robots.txt" sin bloqueos críticos.
 
 ## 2) Canonical consistente
 - [x] Añadir `<link rel="canonical" href={Astro.url.toString()} />` en el layout global (o equivalente).
@@ -134,10 +134,10 @@ location = / { add_header Cache-Control "no-store"; }
   - `Permissions-Policy: geolocation=(), microphone=(), camera=()`
 
 ## 14) CI/CD con presupuestos
-- [ ] Workflow que ejecute tras build:
+- [x] Workflow que ejecute tras build:
   - Lighthouse CI con presupuestos: SEO ≥ 95, TTFB ≤ 0.8s, LCP ≤ 2.5s.
   - Pa11y/axe para a11y básica.
-- [ ] Bloquear deploy si no se cumplen presupuestos.
+- [x] Bloquear deploy si no se cumplen presupuestos.
 
 ---
 

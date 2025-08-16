@@ -14,6 +14,11 @@ export default defineConfig({
     build: {
       minify: 'esbuild',
       cssMinify: 'esbuild',
+      rollupOptions: {
+        output: {
+          compact: true
+        }
+      }
     }
   },
   compressHTML: true

@@ -1,0 +1,179 @@
+SEO Audit R epor t
+Generat ed by Rank Math
+83/100
+Puntuación SEO
+Básico SEO23/26
+Passed T ests0/26
+Advertencias3/26
+Failed T ests
+Palabras clav e comunes
+Una lista de palabras clave que aparecen con frecuencia en el texto de tu contenido.
+Here are the most common keywords we found on the page:
+paraca hypermotionlaligapartidocasapronósticosvaloranalisis
+preciosospronóstico
+SEO Descripción
+SEO analysis of your page's meta-description.
+ The meta description is 162 characters long. Most search engines truncate descriptions longer than 160
+characters. Pronósticos de partidos de fútbol: Malaga CF–Eibar LaLiga Hypermotion 2025/26 – análisis con
+IA, cuotas y valor esperado. Picks con fair odds y gestión de riesgo.
+Escribe una meta-descripción para tu página. Use su(s) palabra(s) clave objetivo (de forma natural) y escriba
+pensando en los lectores humanos. R esuma el contenido: describa los temas que trata su artículo.
+La descripción debe estimular el interés del lector y hacer que haga clic en el artículo. Piense en ello como
+un mini-anuncio para su contenido.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 1/8
+
+Encabezado H1
+SEO Análisis de las Etiquetas H1 en tu página.
+
+ 
+One H1 tag was found on the page.
+Pronósticos Malaga CF vs Eibar – LaLiga Hypermotion 2025/26 (16 ago 2025)
+Encabezados H2
+Análisis SEO de los encabezados H2 en su página.
+
+ 
+One or more H2 tags were found on the page.
+Pronóstico
+Pronóstico y valor esperado
+Cuotas y fair odds
+Datos y forma reciente
+Probabilidades (modelo IA)
+Pick recomendado y stake
+preguntas frecuentes
+Casas recomendadas para apostar
+Atribut os AL T de imagen
+Análisis SEO del atributo "alt" para etiquetas de imágenes.
+ All images on the page have alt attributes.
+Palabras clav e en título y descripción
+SEO analysis of the HTML page's Title and meta description content.
+
+ 
+One or more common keywords were found in the title and description of the page.
+título: hypermotion, laliga, pronósticos, pronóstico
+descripción: hypermotion, laliga, partido, pronósticos, valor, análisis, pronóstico
+Relación de enlaces
+Análisis SEO de la relación de enlaces internos a enlaces externos.
+ The page has a correct number of internal and external links.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 2/8
+
+Advanced SEO 
+interno: 15
+externo: 6
+SEO T ítulo
+SEO analysis of the HTML title of the page.
+ The page title has 89 characters. Most search engines truncate titles longer than 75 characters.
+Pronósticos de fútbol: Malaga CF vs Eibar (J1) – LaLiga Hypermotion 2025/26 (16 ago
+2025)
+Ensure your page's title includes your target keywords, and design it to encourage users to click.
+Escribir títulos convincentes es tanto una ciencia como un arte. Existen herramientas automatizadas que
+pueden analizar su título con métricas conocidas de legibilidad y valor de clics (Rank Math incluye estas
+herramientas). T ambién necesita comprender la psicología de su público objetivo.
+Crear un sitio r esponsiv o
+Nuestro análisis del uso de consultas de medios CSS en su contenido.
+ The CSS code contains consultas de medios .
+Media query found in https://www.pronosticosia.com/_astro/README.BHZUD19D.css .
+La página de inicio es accesible
+Comprueba si se puede acceder a su página de inicio mediante una solicitud HT TP.
+ Homepage is reachable
+Vista pr evia de búsqueda
+Here is how the site may appear in search results:
+Pronósticos de fútbol: Malaga CF vs Eibar (J1) – LaLiga Hypermotion 2025/ …
+https://www .pronosticosia.com/partido/málaga-vs-eibar-2025-08-16-jornada-1
+Pronósticos de partidos de fútbol: Malaga CF–Eibar LaLiga Hypermotion 2025/26 – análisis con IA, cuotas y
+valor esperado. Picks con fair odds y gestión de riesgo.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 3/8
+
+Etiqueta canónica
+Does the content have a "canonical" URL?
+ The page is using the canonical link tag.
+https://www.pronosticosia.com/partido/málaga-vs-eibar-2025-08-16-jornada-1
+Meta sin índice
+Does the content contain a noindex robots meta tag?
+ The page does not contain any índice  metaetiqueta o encabezado.
+Vista pr evia de búsqueda móvil
+Here is how the site may appear in search results on a mobile device:
+Instantánea móvil
+Una instantánea de cómo aparece su contenido en un dispositivo móvil.Pronósticos de fútbol: Malaga CF vs Eibar (J1) – LaLiga Hypermotion 2025/ …
+https://www .pronosticosia.com/partido/málaga-vs-eibar-2025-08-16-jornada-1
+Pronósticos de partidos de fútbol: Malaga CF–Eibar LaLiga Hypermotion 2025/26 – análisis con IA, cuotas y
+valor esperado. Picks con fair odds y gestión de riesgo.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 4/8
+
+
+Canonicalización WWW
+Does the site appear on more than one URL?
+ Both www and non-www versions of the URL are redirected to the same site.
+Metadat os de OpenGraph
+¿Su sitio utiliza etiquetas meta de OpenGraph?
+ Se han encontrado etiquetas meta de Opengraph.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 5/8
+
+ActuaciónMetadat os de esquema
+Does the content include relevant Schema.org metadata?
+ Schema.org data has been found on the page.
+Mapas del sitio
+Does the site use an XML sitemap?
+ The site has one or more sitemaps.
+Robots.t xt
+¿Tiene su sitio un archivo robots.txt válido?
+ The site has a robots.txt file. T ry our free robots.t xt edit or tool to easily test and validate your robots.txt file.
+Mant enga su cont enido actualizado
+Comprueba si hay actualizaciones de contenido recientes utilizando señales disponibles (mapa del sitio XML, og:updated_time o encabezado
+Last-Modified).
+ The content is fresh. Last updated on 2025-08-19 (-3 days ago) via XML Sitemap.
+Broken Links
+Detects broken or dead links (404/500 errors) in the website that may harm SEO and user trust.
+Some link(s) are protected by bot mitigation services.
+Tamaño de p ágina
+Un análisis del tamaño de su archivo HTML.
+ El tamaño del documento HTML es de 12 Kb, por debajo del tamaño promedio de HTML de 33 Kb.
+Tiempo de r espuesta
+¿Qué tan rápido responde su servidor a las solicitudes?
+ The response time is under 0.8 seconds which is great.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 6/8
+
+SeguridadLos encabezados de imagen caducan
+¿Tus imágenes usan encabezados de "caducidad"?
+ No local images found on the page
+Minimizar CSS
+¿Están minificados correctamente sus archivos CSS?
+ Todos los archivos CSS parecen estar minificados.
+Objet os de p ágina
+Analysis of the embedded objects in the pages.
+
+ 
+The page makes 5 requests.
+total: 5
+imágenes: 1
+JavaScript: 2
+hojas de estilo: 2
+Minimizar J avascript
+Does the site use minified JavaScript?
+
+ 
+Some Javascript files don't seem to be minified.
+https://www.pronosticosia.com/_astro/_slug_.astro_astro_type_script_index_0_lang.Crpxbq5t.j
+Los archivos de JavaScript aparecen en muchos lugares, incluidos marcos (como Bootstrap), temas y
+plantillas, y complementos de terceros.
+Por lo tanto, debe rastrear de dónde provienen los archivos JavaScript culpables (no minificados). P or
+ejemplo, si el JavaScript no minimizado vive dentro de un complemento de terceros, puede minimizarlo.
+Pero cuando actualice el complemento a una nueva versión, los archivos JavaScript deberán comprimirse
+nuevamente.
+Existen herramientas del lado del servidor (incluidos los complementos de W ordPress) para minimizar
+automáticamente los archivos JavaScript.16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 7/8
+
+Visibilidad del t ema
+Visibilidad del tema
+The theme is not publicly visible, so it is not easily identifiable.
+Complement os visibles
+Complementos visibles
+ Hurray! None of the plugins are publicly visible.
+Lista de dir ectorios
+¿Su servidor web muestra el contenido de los directorios?
+ Directory Listing seems to be disabled on the server.
+Conexión segura
+¿Su contenido se sirve a través de una conexión segura?
+ The site is using a secure transfer protocol (https).16/8/25, 14:32  
+https://rankmath.com/es/tools/seo-analyzer/ 8/8
+

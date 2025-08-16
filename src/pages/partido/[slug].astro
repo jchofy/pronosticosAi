@@ -123,7 +123,7 @@ const getContrastTextClass = (hex) => {
 
       <header class="mb-6 ">
         <h1 class="text-xl md:text-2xl font-bold leading-snug tracking-tight text-gray-900 not-prose">
-          Pronósticos {match.home_team_name} vs {match.away_team_name} – {match.league_name} ({fmtDateEsShort(match.date)})
+          Pronósticos {match.home_team_name} vs {match.away_team_name} {match.matchday ? `J${match.matchday}` : ''} – {match.league_name} ({fmtDateEsShort(match.date)})
         </h1>
         <hr class="my-4  mb-6 "/>
        
@@ -627,7 +627,7 @@ const getContrastTextClass = (hex) => {
           <h2>Pick recomendado y stake</h2>
           <p>Mostramos primero la apuesta recomendada, su cuota aproximada y una sugerencia de <strong>stake responsable</strong>. Recuerda que las cuotas pueden variar y que el riesgo nunca es cero.</p>
           
-          <h2>Preguntas frecuentes</h2>
+          <h2>Preguntas Frecuentes</h2>
           <h3>¿A qué hora se juega el partido?</h3>
           <p>El partido {match.home_team_name} vs {match.away_team_name} se juega el {fmtDateTime(match.date)}.</p>
           
