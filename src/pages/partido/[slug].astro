@@ -256,7 +256,7 @@ const getContrastTextClass = (hex) => {
             </div>
           </div>
         </div>
-        <script defer>
+        <script type="module" async>
           (function(){
             const boot = () => {
             /** @type {HTMLButtonElement|null} */
@@ -445,11 +445,21 @@ const getContrastTextClass = (hex) => {
             });
             */
             };
+            // Fragmentar la ejecución para evitar bloqueo
+            const scheduleWork = (work, deadline = 5) => {
+              const start = performance.now();
+              if (performance.now() - start < deadline) {
+                work();
+              } else {
+                setTimeout(() => scheduleWork(work, deadline), 0);
+              }
+            };
+            
             if ('requestIdleCallback' in window) {
               // @ts-ignore
-              window.requestIdleCallback(boot, { timeout: 2000 });
+              window.requestIdleCallback(() => scheduleWork(boot), { timeout: 500 });
             } else {
-              setTimeout(boot, 16); // Next frame
+              setTimeout(() => scheduleWork(boot), 100);
             }
             
             // Función global para compra de partido individual

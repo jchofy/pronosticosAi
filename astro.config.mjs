@@ -17,12 +17,16 @@ export default defineConfig({
       rollupOptions: {
         output: {
           compact: true,
-          manualChunks: {
-            react: ['react', 'react-dom'],
-            vendor: ['astro']
+          manualChunks: (id) => {
+            if (id.includes('node_modules/react')) return 'react';
+            if (id.includes('node_modules/@astrojs')) return 'astro';
+            if (id.includes('node_modules/')) return 'vendor';
+            return null;
           }
         }
       },
+      target: 'es2020',
+      modulePreload: { polyfill: false }
       chunkSizeWarningLimit: 1000
     }
   },
