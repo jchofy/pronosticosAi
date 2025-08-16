@@ -3,6 +3,7 @@
 import { SITE_URL } from '../lib/env.js';
 import AuthMenu from '../components/AuthMenu.astro';
 import QuickUsageStatus from '../components/QuickUsageStatus.astro';
+import { AgeVerificationWrapper } from '../components/AgeVerificationWrapper.tsx';
 import '../styles/tailwind.css';
 const {
   title = 'Pronósticos y Partidos',
@@ -154,9 +155,12 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
       </div>
     </aside>
 
-    <main id="app-main" class="mx-auto max-w-5xl px-4 py-6">
-      <slot />
-    </main>
+    <AgeVerificationWrapper client:load>
+      <main id="app-main" class="mx-auto max-w-5xl px-4 py-6">
+        <slot />
+      </main>
+    </AgeVerificationWrapper>
+    
     <footer id="app-footer" class="border-t border-gray-200 py-8">
       <div class="mx-auto max-w-5xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-500">
         <p>© {new Date().getFullYear()} PronosticosIA — Todos los derechos reservados</p>
