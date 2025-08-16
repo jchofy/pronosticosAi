@@ -119,11 +119,11 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
           </a>
           <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/proximos') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/proximos') ? 'page' : undefined} href="/proximos">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
-            <span>Próximos</span>
+            <span>Partidos</span>
           </a>
           <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/clasificacion') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
-            <span>Clasificación</span>
+            <span>Tablas</span>
           </a>
           <a class={`flex items-center gap-2 px-2 py-1 rounded-md transition-colors ${isActive('/precios') ? 'text-brand-700' : 'text-gray-700 hover:text-brand-700'}`} aria-current={isActive('/precios') ? 'page' : undefined} href="/precios">
             <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l7-3 7 3V8a2 2 0 00-2-2h-3z"/></svg>
@@ -168,7 +168,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         </a>
         <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/proximos') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/proximos') ? 'page' : undefined} href="/proximos">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
-          Próximos
+          Partidos
         </a>
         <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/precios') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/precios') ? 'page' : undefined} href="/precios">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4a2 2 0 00-2-2H5a2 2 0 00-2 2v16l7-3 7 3V8a2 2 0 00-2-2h-3z"/></svg>
@@ -176,7 +176,7 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
         </a>
         <a class={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm ${isActive('/clasificacion') ? 'bg-brand-50 text-brand-800' : 'hover:bg-gray-50'} transition-colors`} aria-current={isActive('/clasificacion') ? 'page' : undefined} href="/clasificacion">
           <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
-          Clasificación
+          Tablas
         </a>
       </nav>
       
@@ -206,8 +206,8 @@ const isActive = (href) => path === href || path.startsWith(href + '/');
             <h3 class="font-semibold text-gray-900 mb-3">Navegación</h3>
             <ul class="space-y-2 text-sm text-gray-600">
               <li><a href="/" class="hover:text-gray-900 transition-colors">Inicio</a></li>
-              <li><a href="/ligas" class="hover:text-gray-900 transition-colors">Ligas</a></li>
-              <li><a href="/proximos" class="hover:text-gray-900 transition-colors">Próximos</a></li>
+              <li><a href="/ligas" class="hover:text-gray-900 transition-colors">Competiciones</a></li>
+              <li><a href="/proximos" class="hover:text-gray-900 transition-colors">Calendario</a></li>
               <li><a href="/precios" class="hover:text-gray-900 transition-colors">Precios</a></li>
             </ul>
           </div>

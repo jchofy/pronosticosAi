@@ -613,8 +613,8 @@ const getContrastTextClass = (hex) => {
 
 <section class="not-prose mb-8 px-4 pt-4 ">
           <div class="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-            <a class="btn-ghost btn-xs" href={`/liga/${match.league_slug}`}>Clasificación {match.league_name}</a>
-            <a class="btn-ghost btn-xs" href="/proximos">Próximos partidos</a>
+            <a class="btn-ghost btn-xs" href={`/liga/${match.league_slug}`}>Ver clasificación de {match.league_name}</a>
+            <a class="btn-ghost btn-xs" href="/proximos">Más pronósticos</a>
             <div class="ml-auto flex items-center gap-2">
               <a class="btn-secondary btn-xs" href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener">Compartir X</a>
               <a class="btn-secondary btn-xs" href={`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + shareUrl)}`} target="_blank" rel="noopener">WhatsApp</a>
@@ -623,19 +623,19 @@ const getContrastTextClass = (hex) => {
         </section>
         <section class="prose prose-sm max-w-none px-4 pt-4">
           <h2>Pronóstico y valor esperado</h2>
-          <p>Pronóstico de fútbol para el partido {match.home_team_name} vs {match.away_team_name} de {match.league_name}. Nuestro análisis con <strong>inteligencia artificial</strong> evalúa las <strong>cuotas</strong> y calcula el <strong>valor esperado</strong> para identificar las mejores <strong>apuestas</strong> de fútbol con <strong>picks</strong> rentables.</p>
+          <p>Pronóstico de fútbol para el partido {match.home_team_name} vs {match.away_team_name} de {match.league_name}. Nuestro análisis con <strong>inteligencia artificial</strong> evalúa las cuotas y calcula el valor esperado para identificar las mejores apuestas de fútbol con picks rentables.</p>
 
           <h2>Cuotas y fair odds</h2>
-          <p>Análisis de <strong>cuotas</strong> de fútbol comparándolas con <strong>precios justos</strong> del mercado. Identificamos valor en los principales mercados de <strong>apuestas</strong>: <strong>1X2</strong>, <strong>ambos marcan</strong> y <strong>over/under</strong> para este partido de {match.league_name}.</p>
+          <p>Análisis de <strong>cuotas</strong> de fútbol comparándolas con precios justos del mercado. Identificamos valor en los principales mercados de apuestas: <strong>1X2</strong>, <strong>ambos marcan</strong> y <strong>over/under</strong> para este partido de {match.league_name}.</p>
           
           <h2>Datos y forma reciente</h2>
           <p>Análisis de fútbol basado en estadísticas recientes de {match.home_team_name} y {match.away_team_name}: goles a favor, goles en contra, rendimiento como local/visitante y estado físico del plantel en {match.league_name}.</p>
           
           <h2>Probabilidades (modelo IA)</h2>
-          <p>Nuestro modelo de <strong>inteligencia artificial</strong> para pronósticos de fútbol procesa datos históricos y actuales para generar probabilidades ajustadas que reflejan las condiciones reales del partido {match.home_team_name} vs {match.away_team_name}.</p>
+          <p>Nuestro modelo de IA para pronósticos de fútbol procesa datos históricos y actuales para generar <strong>probabilidades ajustadas</strong> que reflejan las condiciones reales del partido {match.home_team_name} vs {match.away_team_name}.</p>
           
           <h2>Pick recomendado y stake</h2>
-          <p>Nuestros <strong>picks</strong> de fútbol muestran la <strong>apuesta</strong> recomendada para {match.home_team_name} vs {match.away_team_name}, con <strong>cuotas</strong> aproximadas y gestión de <strong>stake responsable</strong>. Recuerda que las cuotas de fútbol pueden variar.</p>
+          <p>Nuestros <strong>picks</strong> de fútbol muestran la apuesta recomendada para {match.home_team_name} vs {match.away_team_name}, con cuotas aproximadas y gestión de stake responsable. Recuerda que las cuotas de fútbol pueden variar.</p>
           
           <h2>Preguntas Frecuentes</h2>
           <h3>¿A qué hora se juega el partido?</h3>
@@ -645,10 +645,10 @@ const getContrastTextClass = (hex) => {
           <p>El partido de fútbol se jugará en {match.stadium || 'el estadio del equipo local'}. Para ver el partido en televisión, consulta la programación de las cadenas que emiten partidos de {match.league_name}.</p>
           
           <h3>¿Qué cuota tiene más valor?</h3>
-          <p>Nuestro análisis de fútbol identifica las <strong>cuotas</strong> con mejor <strong>valor esperado</strong> para las <strong>apuestas</strong> de {match.home_team_name} vs {match.away_team_name}, comparando precios de mercado con probabilidades justas calculadas por <strong>IA</strong>.</p>
+          <p>Nuestro análisis de fútbol identifica las cuotas con mejor <strong>valor esperado</strong> para las apuestas de {match.home_team_name} vs {match.away_team_name}, comparando precios de mercado con probabilidades justas calculadas por IA.</p>
           
           <h3>¿Cuál es el pick recomendado y stake?</h3>
-          <p>Nuestros <strong>picks</strong> de fútbol recomendados para {match.home_team_name} vs {match.away_team_name} se muestran en la sección de <strong>pronóstico</strong> de arriba, junto con la gestión de stake sugerida basada en el <strong>valor esperado</strong>.</p>
+          <p>Nuestros picks de fútbol recomendados para {match.home_team_name} vs {match.away_team_name} se muestran en la sección de <strong>pronóstico</strong> de arriba, junto con la gestión de stake sugerida basada en el valor esperado.</p>
         </section>
 
       {bettingHouses && bettingHouses.length > 0 && (
@@ -706,8 +706,8 @@ const getContrastTextClass = (hex) => {
                 <div class="flex items-center gap-3">
                   <svg class="h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6h4M12 2a10 10 0 100 20 10 10 0 000-20z"/></svg>
                   <div class="min-w-0">
-                    <div class="font-medium text-gray-900 truncate">Próximos partidos</div>
-                    <div class="text-sm text-gray-600">Todos los pronósticos disponibles</div>
+                    <div class="font-medium text-gray-900 truncate">Todos los próximos partidos</div>
+                    <div class="text-sm text-gray-600">Calendario completo de pronósticos</div>
                   </div>
                 </div>
               </a>
@@ -715,8 +715,8 @@ const getContrastTextClass = (hex) => {
                 <div class="flex items-center gap-3">
                   <svg class="h-8 w-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h4v8H3v-8zm7-4h4v12h-4V9zm7-6h4v18h-4V3z"/></svg>
                   <div class="min-w-0">
-                    <div class="font-medium text-gray-900 truncate">Clasificación {match.league_name}</div>
-                    <div class="text-sm text-gray-600">Tabla de posiciones actualizada</div>
+                    <div class="font-medium text-gray-900 truncate">Tabla de {match.league_name}</div>
+                    <div class="text-sm text-gray-600">Posiciones y estadísticas actualizadas</div>
                   </div>
                 </div>
               </a>
